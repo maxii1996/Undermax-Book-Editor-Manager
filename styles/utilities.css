@@ -1,0 +1,350 @@
+.book-name-control {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.book-name-input {
+    width: 100% !important;
+    font-size: 14px !important;
+}
+
+.larger-input {
+    width: 70px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+    padding: 2px 8px !important;
+}
+
+.image-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.image-filename {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #BDBDBD;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 4px 6px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    width: 100%;
+    text-align: center;
+}
+
+.name-with-load {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+}
+
+.name-with-load .book-name-input {
+    flex: 1;
+}
+
+.name-with-load #load-book-btn {
+    white-space: nowrap;
+    height: 30px;
+    padding: 0 10px;
+    background: #3C3C3C;
+    border-radius: 4px;
+    color: white;
+    font-size: 12px;
+}
+
+.name-with-load #load-book-btn:hover {
+    background: #4E4E4E;
+}
+
+.bg-action-row {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+#browse-image-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 15px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: linear-gradient(to bottom, #424242, #383838) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#browse-image-btn:hover {
+    background: linear-gradient(to bottom, #505050, #424242) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+#browse-image-btn:active {
+    transform: translateY(0);
+    background: linear-gradient(to bottom, #383838, #323232) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+#browse-image-btn i {
+    font-size: 16px !important;
+    margin-right: 4px;
+}
+
+#save-book-group .save-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+}
+
+#save-book-group .modern-row {
+    width: 100%;
+}
+
+.home-btn {
+    background: linear-gradient(to bottom, #3C3C3C, #353535) !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-left: auto;
+    align-self: flex-start;
+    font-weight: 400;
+    font-size: 13px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-btn:hover {
+    background: linear-gradient(to bottom, #4C4C4C, #424242) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.home-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.custom-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(0px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1), backdrop-filter 0.5s ease;
+    opacity: 0;
+}
+
+.custom-dialog.show {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    opacity: 1;
+}
+
+.dialog-content {
+    background: rgba(35, 35, 38, 0.9);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), 
+                opacity 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.custom-dialog.show .dialog-content {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dialog-header h3 {
+    margin: 0;
+    color: #E0E0E0;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.dialog-close {
+    background: transparent;
+    border: none;
+    color: #BFBFBF;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+.dialog-body {
+    padding: 24px;
+    color: #BFBFBF;
+    line-height: 1.5;
+}
+
+#add-page-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 12px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: linear-gradient(to bottom, #0078D7, #006CC1) !important;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+#add-page-btn i {
+    font-size: 16px;
+}
+
+.warning {
+    color: #FF9800;
+    font-weight: 500;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.warning::before {
+    content: '\ea0b';
+    font-family: 'remixicon';
+    font-size: 18px;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.dialog-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dialog-btn.cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #E0E0E0;
+}
+
+.dialog-btn.cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.dialog-btn.confirm {
+    background: linear-gradient(to bottom, #0078D7, #006CC1);
+    color: white;
+}
+
+.dialog-btn.confirm:hover {
+    background: linear-gradient(to bottom, #0086F0, #0078D7);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 120, 215, 0.4);
+}
+
+.dialog-btn.confirm:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 120, 215, 0.3);
+}
+
+.settings-group.navigation-card {
+    background: rgba(112, 71, 235, 0.08);
+    border-left: 3px solid #7047EB;
+}
+
+.settings-group.navigation-card h3 {
+    color: #9E80FF;
+}
+
+#dimension-update-progress.custom-dialog .dialog-content {
+    max-width: 450px;
+}
+
+#dimension-update-progress .dialog-body {
+    padding: 20px 24px 24px;
+}
+
+#dimension-update-progress .progress-bar-container {
+    margin: 20px 0;
+    height: 8px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(30, 30, 30, 0.1);
+    border-radius: 4px;
+    margin: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(80, 80, 80, 0.5);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 100, 100, 0.7);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(80, 80, 80, 0.5) rgba(30, 30, 30, 0.1);
+}
+
+#page-list {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    padding-right: 10px;
+}
+
+.wizard-content::-webkit-scrollbar-thumb {
+    background: rgba(60, 60, 60, 0.4);
+}
+
+.wizard-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(80, 80, 80, 0.6);
+}

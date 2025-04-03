@@ -1,0 +1,24 @@
+/**
+ * Constantes globales para el Book Editor
+ */
+
+const BOOK_CONSTANTS = {
+    MIN_WIDTH: 200,
+    MAX_WIDTH: 500,
+    DEFAULT_WIDTH: 300,
+    
+    MIN_HEIGHT: 250,
+    MAX_HEIGHT: 700,
+    DEFAULT_HEIGHT: 400,
+    
+    DEFAULT_COVER_COLOR: "#DC143C",
+    DEFAULT_BACK_COVER_COLOR: "#DC143C",
+    DEFAULT_EDITOR_COLOR: "#FFFFFF",
+    
+    DEFAULT_PAGE_COUNT: 1,
+    MIN_PAGE_COUNT: 1,
+    MAX_PAGE_COUNT: 50,
+    
+    MIN_ZOOM: 10,
+    MAX_ZOOM: 200
+};

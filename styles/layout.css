@@ -1,0 +1,134 @@
+#left-panel {
+    width: 20%;
+    background: #252526;
+    border-right: 1px solid #3E3E42;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#left-panel h1 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #E0E0E0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #3E3E42;
+}
+
+#middle-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #3E3E42;
+    min-width: 0;
+}
+
+#middle-panel-top {
+    padding: 15px;
+    background: #252526;
+    border-bottom: 1px solid #3E3E42;
+}
+
+#right-panel {
+    width: 450px;
+    background: #252526;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    padding: 15px;
+    min-width: 0;
+}
+
+#info-bar {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #BFBFBF;
+    text-align: center;
+    border-radius: 4px;
+    background: #2D2D30;
+}
+
+#editor-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 20px;
+}
+
+#button-bar {
+    display: none;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.settings-group .modern-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.modern-button {
+    background: linear-gradient(to bottom, #3C3C3C, #353535);
+    color: #ECECEC;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.modern-button:hover {
+    background: linear-gradient(to bottom, #4C4C4C, #424242);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.modern-button:active {
+    transform: translateY(0);
+    background: linear-gradient(to bottom, #383838, #323232);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.settings-group h3 {
+    color: #E0E0E0;
+    margin: 10px 0;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #252526;
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #E0E0E0;
+}
+
+.settings-scroll {
+    overflow-y: auto;
+    height: calc(100% - 60px);
+    padding: 15px;
+}

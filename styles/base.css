@@ -1,0 +1,23 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1E1E1E;
+    color: #ECECEC;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+}

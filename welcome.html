@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UndermaxBook - Welcome</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="styles/styles.css" rel="stylesheet">
+    <link href="styles/welcome.css" rel="stylesheet">
+    <link href="styles/welcome-components.css" rel="stylesheet">
+</head>
+<body class="welcome-body">
+    <div class="welcome-container">
+        <div class="welcome-header">
+            <div class="logo-container">
+                <i class="ri-book-2-line"></i>
+                <h1>Welcome to the Undermax Book Maker</h1>
+            </div>
+            <p class="welcome-subtitle">A graphical interface to add books to your RPG MAKER MZ games!</p>
+        </div>
+        
+        <div class="card-container">
+            <div class="welcome-card" id="new-book">
+                <div class="card-icon">
+                    <i class="ri-add-circle-line"></i>
+                </div>
+                <h2>New Book</h2>
+                <p>Create a new book from scratch with our easy-to-use wizard</p>
+                <button class="card-button" id="new-book-btn">
+                    <i class="ri-add-line"></i> Create
+                </button>
+                <div class="tooltip">Quick and easy setup for your book</div>
+            </div>
+            
+            <div class="welcome-card" id="load-book">
+                <div class="card-icon">
+                    <i class="ri-folder-open-line"></i>
+                </div>
+                <h2>Load Book</h2>
+                <p>Continue working on an existing book project</p>
+                <button class="card-button" id="load-book-btn">
+                    <i class="ri-folder-open-line"></i> Open
+                </button>
+                <input type="file" id="welcome-file-input" accept=".json" style="display: none;">
+                <div class="tooltip">Load a previously saved book file</div>
+            </div>
+        </div>
+        
+        <div class="welcome-footer">
+            <p>Created by Undermax Team <a href="https://undermax.itch.io/" target="_blank" class="undermax-link"><i class="ri-external-link-line"></i>Visit our site</a></p>
+            <p>This tool requires the "ModernBooks" plugin installed in your RPG Maker MZ project.</p>
+        </div>
+    </div>
+
+    <div class="wizard-container" style="display: none;">
+        <div class="wizard-header">
+            <h2>New Book Setup</h2>
+            <button class="close-wizard" id="close-wizard-btn">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        
+        <div class="wizard-content">
+            <div class="wizard-step" data-step="1">
+                <h3>Name Your Book</h3>
+                <p>Choose a name for your book. This will be used as the filename when saving your project.</p>
+                
+                <div class="input-group">
+                    <label for="wizard-book-name">Book Name</label>
+                    <input type="text" id="wizard-book-name" placeholder="Enter book name..." autofocus>
+                </div>
+                
+                <div class="wizard-tip">
+                    <i class="ri-information-line"></i>
+                    <p>The name will also be used when integrating your book with RPG Maker MZ.</p>
+                </div>
+            </div>
+            
+            <div class="wizard-step" data-step="2" style="display: none;">
+                <h3>Book Dimensions</h3>
+                <p>Set the width and height for your book pages.</p>
+                
+                <div class="dimension-presets">
+                    <button class="preset-btn" data-width="250" data-height="350">Small</button>
+                    <button class="preset-btn active" data-width="350" data-height="400">Medium</button>
+                    <button class="preset-btn" data-width="450" data-height="500">Large</button>
+                </div>
+                
+                <div class="dimension-group">
+                    <div class="input-group half">
+                        <label for="wizard-book-width">Width (px)</label>
+                        <input type="text" id="wizard-book-width" value="350" maxlength="3" pattern="[0-9]*">
+                    </div>
+                    <div class="input-group half">
+                        <label for="wizard-book-height">Height (px)</label>
+                        <input type="text" id="wizard-book-height" value="400" maxlength="3" pattern="[0-9]*">
+                    </div>
+                </div>
+                
+                <div class="preview-box">
+                    <div class="dimension-preview" id="dimension-preview"></div>
+                    <p>Preview</p>
+                </div>
+                
+                <div class="wizard-tip">
+                    <i class="ri-lightbulb-line"></i>
+                    <p>We recommend 350 × 400 pixels for optimal viewing experience.</p>
+                </div>
+            </div>
+            
+            <div class="wizard-step" data-step="3" style="display: none;">
+                <div class="wizard-step-split">
+                    <div class="wizard-step-content">
+                        <h3>Front Cover Design</h3>
+                        <p>Customize the appearance of your book's front cover.</p>
+                        
+                        <div class="cover-options">
+                            <div class="cover-option">
+                                <input type="radio" name="cover-type" id="cover-color" checked>
+                                <label for="cover-color">Solid Color</label>
+                                
+                                <div class="color-picker-container">
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="wizard-cover-color" value="#DC143C" class="color-picker">
+                                        <div class="color-picker-display" style="background-color: #DC143C;"></div>
+                                        <div class="color-picker-icon">
+                                            <i class="ri-palette-line"></i>
+                                        </div>
+                                    </div>
+                                    <div class="color-preview" style="--preview-color: #DC143C"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="cover-option">
+                                <input type="radio" name="cover-type" id="cover-image">
+                                <label for="cover-image">Background Image</label>
+                                
+                                <div class="image-upload-container">
+                                    <button class="image-upload-btn" id="cover-image-btn">
+                                        <i class="ri-image-add-line"></i> Browse Image
+                                    </button>
+                                    <span class="image-name" id="cover-image-name">No image selected</span>
+                                    <input type="file" id="cover-image-input" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-step-preview">
+                        <div class="dual-preview-container">
+                            <div class="book-preview front-preview">
+                                <div class="preview-label">Front Cover</div>
+                                <div class="book-cover front" style="background-color: #DC143C;">
+                                    <span>TITLE</span>
+                                </div>
+                            </div>
+                            <div class="book-preview back-preview">
+                                <div class="preview-label">Back Cover</div>
+                                <div class="book-cover back" style="background-color: #DC143C;">
+                                    <span>THE END</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-controls">
+                            <button class="preview-toggle-btn active" data-view="dual">
+                                <i class="ri-layout-2-line"></i> Both
+                            </button>
+                            <button class="preview-toggle-btn" data-view="front">
+                                <i class="ri-book-open-line"></i> Front
+                            </button>
+                            <button class="preview-toggle-btn" data-view="back">
+                                <i class="ri-book-open-fill"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wizard-step" data-step="4" style="display: none;">
+                <div class="wizard-step-split">
+                    <div class="wizard-step-content">
+                        <h3>Back Cover Design</h3>
+                        <p>Customize the appearance of your book's back cover.</p>
+                        
+                        <div class="cover-options">
+                            <div class="cover-option">
+                                <input type="radio" name="back-cover-type" id="back-cover-color" checked>
+                                <label for="back-cover-color">Solid Color</label>
+                                
+                                <div class="color-picker-container">
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="wizard-back-cover-color" value="#DC143C" class="color-picker">
+                                        <div class="color-picker-display" id="back-color-picker-display" style="background-color: #DC143C;"></div>
+                                        <div class="color-picker-icon">
+                                            <i class="ri-palette-line"></i>
+                                        </div>
+                                    </div>
+                                    <div class="color-preview" id="back-cover-color-preview"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="cover-option">
+                                <input type="radio" name="back-cover-type" id="back-cover-image">
+                                <label for="back-cover-image">Background Image</label>
+                                
+                                <div class="image-upload-container">
+                                    <button class="image-upload-btn" id="back-cover-image-btn">
+                                        <i class="ri-image-add-line"></i> Browse Image
+                                    </button>
+                                    <span class="image-name" id="back-cover-image-name">No image selected</span>
+                                    <input type="file" id="back-cover-image-input" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wizard-step-preview">
+                        <div class="dual-preview-container">
+                            <div class="book-preview front-preview">
+                                <div class="preview-label">Front Cover</div>
+                                <div class="book-cover front" style="background-color: #DC143C;">
+                                    <span>TITLE</span>
+                                </div>
+                            </div>
+                            <div class="book-preview back-preview">
+                                <div class="preview-label">Back Cover</div>
+                                <div class="book-cover back" style="background-color: #DC143C;">
+                                    <span>THE END</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-controls">
+                            <button class="preview-toggle-btn active" data-view="dual">
+                                <i class="ri-layout-2-line"></i> Both
+                            </button>
+                            <button class="preview-toggle-btn" data-view="front">
+                                <i class="ri-book-open-line"></i> Front
+                            </button>
+                            <button class="preview-toggle-btn" data-view="back">
+                                <i class="ri-book-open-fill"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wizard-step" data-step="5" style="display: none;">
+                <h3>Page Count</h3>
+                <p>How many pages would you like your book to have?</p>
+                
+                <div class="page-counter">
+                    <div class="page-control" id="decrease-pages">
+                        <i class="ri-subtract-line"></i>
+                    </div>
+                    <input type="text" class="page-input" id="wizard-page-count" value="2" min="1">
+                    <div class="page-control" id="increase-pages">
+                        <i class="ri-add-line"></i>
+                    </div>
+                </div>
+                
+                <div class="pages-visual" id="pages-visual-container">
+                </div>
+                
+                <div class="wizard-tip">
+                    <i class="ri-information-line"></i>
+                    <p>This adds pages between the front and back covers. You can add more pages later.</p>
+                </div>
+            </div>
+            
+            <div class="wizard-step final-step" data-step="6" style="display: none;">
+                <div class="completion-message">
+                    <i class="ri-check-double-line"></i>
+                    <h3>Setup Complete!</h3>
+                    <p>Your new book is ready to be created. You can always modify these settings later.</p>
+                </div>
+                
+                <div class="book-summary">
+                    <h4>Book Summary</h4>
+                    <ul>
+                        <li><strong>Name:</strong> <span id="summary-name"></span></li>
+                        <li><strong>Dimensions:</strong> <span id="summary-dimensions"></span></li>
+                        <li><strong>Pages:</strong> <span id="summary-pages"></span></li>
+                    </ul>
+                </div>
+                
+                <button class="create-book-btn" id="create-book-btn">
+                    <i class="ri-book-open-line"></i> Create My Book
+                </button>
+            </div>
+        </div>
+        
+        <div class="wizard-footer">
+            <div class="wizard-progress">
+                <div class="progress-dots">
+                    <span class="dot active" data-step="1"></span>
+                    <span class="dot" data-step="2"></span>
+                    <span class="dot" data-step="3"></span>
+                    <span class="dot" data-step="4"></span>
+                    <span class="dot" data-step="5"></span>
+                    <span class="dot" data-step="6"></span>
+                </div>
+            </div>
+            <div class="wizard-buttons">
+                <button class="wizard-btn" id="prev-step-btn" disabled>
+                    <i class="ri-arrow-left-line"></i> Back
+                </button>
+                <button class="wizard-btn primary" id="next-step-btn">
+                    Next <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/notifications/notifications.js"></script>
+    <script src="js/welcome/welcome-ui.js"></script>
+    <script src="js/welcome/welcome-wizard.js"></script>
+    <script src="js/welcome.js"></script>
+    <script src="js/debug-utils.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/welcome/page-sync.js"></script>
+</body>
+</html>

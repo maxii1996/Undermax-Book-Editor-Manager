@@ -58,31 +58,31 @@ function addMiddlePage() {
 function renderPageList() {
     const list = document.getElementById("page-list");
     list.innerHTML = "";
-    
+
     for (let i = 0; i < pages.length; i++) {
         const div = document.createElement("div");
-        div.className = "page-item"; // Add this class
+        div.className = "page-item";
         const isFirstPage = i === 0;
         const isLastPage = i === pages.length - 1;
         const isMiddlePage = !isFirstPage && !isLastPage;
-        
+
         const pageName = document.createElement("span");
         pageName.className = "page-name";
-        
+
         if (isFirstPage) pageName.textContent = "Cover";
         else if (isLastPage) pageName.textContent = "Back Cover";
         else pageName.textContent = "Page " + i;
-        
+
         div.appendChild(pageName);
-        
+
         const actionsDiv = document.createElement("div");
         actionsDiv.className = "page-actions";
-        
+
         const moveUpBtn = document.createElement("button");
         moveUpBtn.className = `page-btn move-up ${isFirstPage || isLastPage ? 'disabled' : ''}`;
         moveUpBtn.innerHTML = '<i class="ri-arrow-up-s-line"></i>';
         moveUpBtn.title = "Move page up";
-        
+
         if (isMiddlePage && i > 1) {
             moveUpBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -91,12 +91,12 @@ function renderPageList() {
         } else {
             moveUpBtn.disabled = true;
         }
-        
+
         const moveDownBtn = document.createElement("button");
         moveDownBtn.className = `page-btn move-down ${isFirstPage || isLastPage ? 'disabled' : ''}`;
         moveDownBtn.innerHTML = '<i class="ri-arrow-down-s-line"></i>';
         moveDownBtn.title = "Move page down";
-        
+
         if (isMiddlePage && i < pages.length - 2) {
             moveDownBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -105,12 +105,12 @@ function renderPageList() {
         } else {
             moveDownBtn.disabled = true;
         }
-        
+
         const deleteBtn = document.createElement("button");
         deleteBtn.className = `page-btn delete ${isFirstPage || isLastPage ? 'disabled' : ''}`;
         deleteBtn.innerHTML = '<i class="ri-delete-bin-6-line"></i>';
         deleteBtn.title = "Delete page";
-        
+
         if (isMiddlePage) {
             deleteBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -119,22 +119,22 @@ function renderPageList() {
         } else {
             deleteBtn.disabled = true;
         }
-        
+
         actionsDiv.appendChild(moveUpBtn);
         actionsDiv.appendChild(moveDownBtn);
         actionsDiv.appendChild(deleteBtn);
-        
+
         div.appendChild(actionsDiv);
-        
+
         if (i === currentPageIndex) div.classList.add("selected");
-        
+
         div.addEventListener("click", () => {
             saveEditorChanges();
             loadPageIntoEditor(i);
             renderPageList();
             updateFlipBook();
         });
-        
+
         list.appendChild(div);
     }
 }
@@ -143,19 +143,19 @@ function movePageUp(index) {
     if (index <= 1 || index >= pages.length - 1) return;
 
     saveEditorChanges();
-    
+
     const temp = pages[index];
     pages[index] = pages[index - 1];
     pages[index - 1] = temp;
-    
+
     updatePageNames();
-    
+
     if (currentPageIndex === index) {
         currentPageIndex--;
     } else if (currentPageIndex === index - 1) {
         currentPageIndex++;
     }
-    
+
     renderPageList();
     loadPageIntoEditor(currentPageIndex);
     updateFlipBook();
@@ -164,21 +164,21 @@ function movePageUp(index) {
 
 function movePageDown(index) {
     if (index <= 0 || index >= pages.length - 2) return;
-    
+
     saveEditorChanges();
-    
+
     const temp = pages[index];
     pages[index] = pages[index + 1];
     pages[index + 1] = temp;
-    
+
     updatePageNames();
-    
+
     if (currentPageIndex === index) {
         currentPageIndex++;
     } else if (currentPageIndex === index + 1) {
         currentPageIndex--;
     }
-    
+
     renderPageList();
     loadPageIntoEditor(currentPageIndex);
     updateFlipBook();
@@ -187,15 +187,15 @@ function movePageDown(index) {
 
 function deletePage(index) {
     if (index <= 0 || index >= pages.length - 1) return;
-    
+
     pages.splice(index, 1);
-    
+
     updatePageNames();
-    
+
     if (currentPageIndex >= index) {
         currentPageIndex = Math.max(currentPageIndex - 1, 0);
     }
-    
+
     renderPageList();
     loadPageIntoEditor(currentPageIndex);
     updateFlipBook();
@@ -217,22 +217,24 @@ function updatePageNames() {
 function showDeleteConfirmation(index) {
     const dialog = document.getElementById('delete-page-dialog');
     const message = document.getElementById('delete-page-message');
-    
+
     message.textContent = `This will permanently delete Page ${index}. This action cannot be undone.`;
-    
+
     dialog.style.display = 'flex';
     setTimeout(() => {
         dialog.classList.add('show');
     }, 10);
-    
+
     document.getElementById('confirm-delete-btn').setAttribute('data-page-index', index);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+window.showDeleteConfirmation = showDeleteConfirmation;
+
+document.addEventListener('DOMContentLoaded', function () {
     const closeDeleteDialogBtn = document.getElementById('close-delete-dialog-btn');
     const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-    
+
     function hideDeleteDialog() {
         const dialog = document.getElementById('delete-page-dialog');
         dialog.classList.remove('show');
@@ -240,17 +242,17 @@ document.addEventListener('DOMContentLoaded', function() {
             dialog.style.display = 'none';
         }, 300);
     }
-    
+
     if (closeDeleteDialogBtn) {
         closeDeleteDialogBtn.addEventListener('click', hideDeleteDialog);
     }
-    
+
     if (cancelDeleteBtn) {
         cancelDeleteBtn.addEventListener('click', hideDeleteDialog);
     }
-    
+
     if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
+        confirmDeleteBtn.addEventListener('click', function () {
             const pageIndex = parseInt(this.getAttribute('data-page-index'), 10);
             deletePage(pageIndex);
             hideDeleteDialog();
@@ -261,87 +263,87 @@ document.addEventListener('DOMContentLoaded', function() {
 function saveEditorChanges() {
     if (pages.length === 0) return;
 
-    const minWidth = 200;
-    const minHeight = 250;
-    const maxWidth = 500;
-    const maxHeight = 700;
+    const minWidth = BOOK_CONSTANTS.MIN_WIDTH;
+    const minHeight = BOOK_CONSTANTS.MIN_HEIGHT;
+    const maxWidth = BOOK_CONSTANTS.MAX_WIDTH;
+    const maxHeight = BOOK_CONSTANTS.MAX_HEIGHT;
 
-    bookData.bookName = document.getElementById("bookName").value || "";
+    const bookNameEl = document.getElementById("bookName");
+    const bookWidthEl = document.getElementById("bookWidth");
+    const bookHeightEl = document.getElementById("bookHeight");
+    const pageBgColorEl = document.getElementById("pageBgColor");
+    const pageBgImageEl = document.getElementById("pageBgImage");
+    const editorColorInputEl = document.getElementById("editorColorInput");
 
-    let width = parseInt(document.getElementById("bookWidth").value, 10) || 300;
-    let height = parseInt(document.getElementById("bookHeight").value, 10) || 400;
+    if (bookNameEl) bookData.bookName = bookNameEl.value || "";
+
+    let width = bookWidthEl ? parseInt(bookWidthEl.value, 10) : 300;
+    let height = bookHeightEl ? parseInt(bookHeightEl.value, 10) : 400;
 
     width = Math.max(minWidth, Math.min(width, maxWidth));
     height = Math.max(minHeight, Math.min(height, maxHeight));
 
     bookData.bookWidth = width;
     bookData.bookHeight = height;
-
-    document.getElementById("bookWidth").value = width;
-    document.getElementById("bookHeight").value = height;
-
-    bookData.coverColor = document.getElementById("coverColorInput").value;
-    bookData.backCoverColor = document.getElementById("backCoverColorInput").value;
-    bookData.editorColor = document.getElementById("editorColorInput").value;
+    bookData.editorColor = editorColorInputEl ? editorColorInputEl.value : '#FFFFFF';
 
     const p = pages[currentPageIndex];
     p.width = bookData.bookWidth;
     p.height = bookData.bookHeight;
-    p.backgroundColor = document.getElementById("pageBgColor").value;
+
+    if (pageBgColorEl) {
+        p.backgroundColor = pageBgColorEl.value;
+        
+        if (currentPageIndex === 0) {
+            bookData.coverColor = pageBgColorEl.value;
+        } else if (currentPageIndex === pages.length - 1) {
+            bookData.backCoverColor = pageBgColorEl.value;
+        }
+    }
+
     p.backgroundImage = document.getElementById("pageBgImage").textContent !== "No image selected" ?
         p.backgroundImage : "";
-    p.contentHtml = quill.root.innerHTML;
 
-    const format = quill.getFormat();
-    p.alignment = format.align || '';
+    if (editor) {
+        p.contentHtml = editor.innerHTML;
 
-    if (currentPageIndex === 0) {
-        p.backgroundColor = bookData.coverColor;
+        const paragraphs = editor.querySelectorAll('p');
+        if (paragraphs.length > 0) {
+            const textAlign = window.getComputedStyle(paragraphs[0]).textAlign;
+            if (textAlign && textAlign !== 'start') {
+                p.alignment = textAlign;
+            } else {
+                p.alignment = '';
+            }
+        }
     }
-    if (currentPageIndex === pages.length - 1) {
-        p.backgroundColor = bookData.backCoverColor;
-    }
-
-    if (typeof quill !== 'undefined' && quill) {
-        p.contentHtml = quill.root.innerHTML;
-        p.alignment = quill.getFormat().align || '';
-    }
-
-    if (currentPageIndex !== 0 && currentPageIndex !== pages.length - 1) {
-        p.backgroundColor = document.getElementById("pageBgColor").value;
-    }
-
-    p.backgroundImage = document.getElementById("pageBgImage").textContent !== "No image selected" ?
-        p.backgroundImage : '';
 }
 
 function updateAllPageDimensions() {
-    const newWidth = parseInt(document.getElementById("bookWidth").value);
-    const newHeight = parseInt(document.getElementById("bookHeight").value);
+    let newWidth = parseInt(document.getElementById("bookWidth").value);
+    let newHeight = parseInt(document.getElementById("bookHeight").value);
 
-    if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) {
-        return;
-    }
-    
+    newWidth = Math.max(BOOK_CONSTANTS.MIN_WIDTH, Math.min(BOOK_CONSTANTS.MAX_WIDTH, newWidth || BOOK_CONSTANTS.DEFAULT_WIDTH));
+    newHeight = Math.max(BOOK_CONSTANTS.MIN_HEIGHT, Math.min(BOOK_CONSTANTS.MAX_HEIGHT, newHeight || BOOK_CONSTANTS.DEFAULT_HEIGHT));
+
+    document.getElementById("bookWidth").value = newWidth;
+    document.getElementById("bookHeight").value = newHeight;
+
+    bookData.bookWidth = newWidth;
+    bookData.bookHeight = newHeight;
+
     saveEditorChanges();
 
     showDimensionUpdateProgress();
-    
-    setTimeout(() => {
-        bookData.bookWidth = newWidth;
-        bookData.bookHeight = newHeight;
 
+    setTimeout(() => {
         pages.forEach((page, index) => {
             page.width = newWidth;
             page.height = newHeight;
             updateProgressDialog(index + 1, pages.length);
         });
 
-        const editorContainer = document.getElementById("editor-container");
-        if (editorContainer) {
-            editorContainer.style.width = newWidth + "px";
-            editorContainer.style.height = newHeight + "px";
-        }
+        updateEditorSize(newWidth, newHeight);
 
         updateFlipBook();
 
@@ -349,7 +351,7 @@ function updateAllPageDimensions() {
 
         setTimeout(() => {
             hideDimensionUpdateProgress();
-            
+
             if (event && event.type === 'click') {
                 notifications.success("Dimensions applied to all pages successfully");
             }
@@ -357,9 +359,22 @@ function updateAllPageDimensions() {
     }, 100);
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    const applyButton = document.getElementById("applyDimensions");
+    if (applyButton) {
+        const newApplyButton = applyButton.cloneNode(true);
+        applyButton.parentNode.replaceChild(newApplyButton, applyButton);
+
+        newApplyButton.addEventListener("click", function (event) {
+            updateAllPageDimensions();
+            loadPageIntoEditor(currentPageIndex);
+        });
+    }
+});
+
 function showDimensionUpdateProgress() {
     let progressDialog = document.getElementById('dimension-update-progress');
-    
+
     if (!progressDialog) {
         progressDialog = document.createElement('div');
         progressDialog.id = 'dimension-update-progress';
@@ -380,7 +395,7 @@ function showDimensionUpdateProgress() {
         `;
         document.body.appendChild(progressDialog);
     }
-    
+
     progressDialog.style.display = 'flex';
     setTimeout(() => {
         progressDialog.classList.add('show');
@@ -390,7 +405,7 @@ function showDimensionUpdateProgress() {
 function updateProgressDialog(current, total) {
     const progressMessage = document.getElementById('progress-message');
     const progressBar = document.getElementById('dimension-progress-bar');
-    
+
     if (progressMessage && progressBar) {
         progressMessage.textContent = `Applying changes to pages: ${current}/${total}`;
         const percentage = (current / total) * 100;
@@ -400,7 +415,7 @@ function updateProgressDialog(current, total) {
 
 function hideDimensionUpdateProgress() {
     const progressDialog = document.getElementById('dimension-update-progress');
-    
+
     if (progressDialog) {
         progressDialog.classList.remove('show');
         setTimeout(() => {
@@ -409,7 +424,64 @@ function hideDimensionUpdateProgress() {
     }
 }
 
+function resetDimensionsToDefault() {
+    const defaultWidth = BOOK_CONSTANTS.DEFAULT_WIDTH;
+    const defaultHeight = BOOK_CONSTANTS.DEFAULT_HEIGHT;
+    const minWidth = BOOK_CONSTANTS.MIN_WIDTH;
+    const minHeight = BOOK_CONSTANTS.MIN_HEIGHT;
+    const maxWidth = BOOK_CONSTANTS.MAX_WIDTH;
+    const maxHeight = BOOK_CONSTANTS.MAX_HEIGHT;
+
+    let width = defaultWidth;
+    let height = defaultHeight;
+
+    width = Math.max(minWidth, Math.min(width, maxWidth));
+    height = Math.max(minHeight, Math.min(height, maxHeight));
+
+    document.getElementById("bookWidth").value = width;
+    document.getElementById("bookHeight").value = height;
+
+    bookData.bookWidth = width;
+    bookData.bookHeight = height;
+
+    updateAllPageDimensions();
+}
+
 function setupDimensionsListeners() {
+    const bookWidthInput = document.getElementById("bookWidth");
+    const bookHeightInput = document.getElementById("bookHeight");
+
+    if (bookWidthInput) {
+        bookWidthInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        bookWidthInput.addEventListener('blur', function () {
+            let value = parseInt(this.value) || BOOK_CONSTANTS.DEFAULT_WIDTH;
+            value = Math.max(BOOK_CONSTANTS.MIN_WIDTH, Math.min(BOOK_CONSTANTS.MAX_WIDTH, value));
+            this.value = value;
+        });
+    }
+
+    if (bookHeightInput) {
+        bookHeightInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        bookHeightInput.addEventListener('blur', function () {
+            let value = parseInt(this.value) || BOOK_CONSTANTS.DEFAULT_HEIGHT;
+            value = Math.max(BOOK_CONSTANTS.MIN_HEIGHT, Math.min(BOOK_CONSTANTS.MAX_HEIGHT, value));
+            this.value = value;
+        });
+    }
+
+    document.getElementById("applyDimensions").addEventListener("click", function () {
+        updateAllPageDimensions();
+    });
+
+    document.getElementById("resetDimensions").addEventListener("click", function () {
+        resetDimensionsToDefault();
+    });
 }
 
 document.addEventListener('DOMContentLoaded', setupDimensionsListeners);
@@ -419,91 +491,250 @@ document.getElementById("applyDimensions").addEventListener("click", function (e
     loadPageIntoEditor(currentPageIndex);
 });
 
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const imagePreview = document.getElementById("image-preview");
+    if (imagePreview) {
+        imagePreview.innerHTML = '<div class="image-loading">Processing image...</div>';
+        imagePreview.style.display = "flex";
+    }
+
+    setTimeout(() => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            optimizeImage(e.target.result, (optimizedImage) => {
+                document.getElementById("pageBgImage").textContent = file.name;
+                pages[currentPageIndex].backgroundImage = optimizedImage;
+
+                requestAnimationFrame(() => {
+                    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
+                    if (backgroundColorGroup) {
+                        backgroundColorGroup.style.display = "none";
+                    }
+
+                    updateRemoveImageButtonState();
+                    updateFlipBook();
+                });
+            });
+        };
+
+        reader.readAsDataURL(file);
+    }, 0);
+    
+    event.target.value = '';
+}
+
+function optimizeImage(dataUrl, callback) {
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        
+        const MAX_WIDTH = 1200; 
+        const MAX_HEIGHT = 1600;
+        
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+            if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+            }
+        } else {
+            if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+            }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const optimizedImage = canvas.toDataURL('image/jpeg', 0.85);
+        callback(optimizedImage);
+    };
+    img.src = dataUrl;
+}
+
 function removeBackgroundImage() {
     if (pages.length === 0) return;
 
     pages[currentPageIndex].backgroundImage = '';
 
-    document.getElementById("pageBgImage").textContent = "No image selected";
+    requestAnimationFrame(() => {
+        document.getElementById("pageBgImage").textContent = "No image selected";
+        
+        const imagePreview = document.getElementById("image-preview");
+        if (imagePreview) {
+            imagePreview.style.backgroundImage = '';
+            imagePreview.style.display = "none";
+            imagePreview.innerHTML = '';
+        }
 
-    saveEditorChanges();
+        const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
+        if (backgroundColorGroup) {
+            backgroundColorGroup.style.display = "block";
+        }
 
-    updateRemoveImageButtonState();
+        const pageElements = document.querySelectorAll('.page');
+        if (pageElements && pageElements.length > 0) {
+            pageElements.forEach(page => {
+                if (parseInt(page.getAttribute('data-index')) === currentPageIndex) {
+                    page.style.backgroundImage = '';
+                    page.removeAttribute('data-bg-image');
+                    page.classList.remove('has-bg-image');
+                }
+            });
+        }
 
-    updateFlipBook();
+        const book = document.getElementById('book');
+        if (book) {
+            const bookPages = book.querySelectorAll('.page');
+            bookPages.forEach(page => {
+                if (parseInt(page.getAttribute('data-index')) === currentPageIndex) {
+                    page.style.backgroundImage = '';
+                    page.removeAttribute('data-bg-image');
+                    page.classList.remove('has-bg-image');
+                }
+            });
+        }
 
-    notifications.info("Background image removed");
+        applyBackgroundColor();
+        
+        saveEditorChanges();
+        updateRemoveImageButtonState();
+        updateFlipBook();
+        notifications.info("Background image removed");
+    });
+}
+
+function applyBackgroundColor() {
+    if (pages.length === 0) return;
+    
+    const currentPage = pages[currentPageIndex];
+    const backgroundColor = currentPage.backgroundColor || "#FFFFFF";
+    
+    const pageElements = document.querySelectorAll('.page');
+    if (pageElements && pageElements.length > 0) {
+        pageElements.forEach(page => {
+            if (parseInt(page.getAttribute('data-index')) === currentPageIndex) {
+                page.style.backgroundColor = backgroundColor;
+            }
+        });
+    }
+    
+    const colorInput = document.getElementById('pageBgColor');
+    if (colorInput) {
+        colorInput.value = backgroundColor;
+        const colorPreview = colorInput.parentElement.querySelector('.color-preview');
+        if (colorPreview) {
+            colorPreview.style.backgroundColor = backgroundColor;
+        }
+    }
 }
 
 function updateRemoveImageButtonState() {
-    const removeButton = document.getElementById("remove-image-btn");
-    const imageStatus = document.getElementById("pageBgImage").textContent;
+    const removeImageBtn = document.getElementById("remove-image-btn");
+    if (!removeImageBtn) return;
 
-    if (imageStatus === "No image selected") {
-        removeButton.style.display = "none";
+    if (pages[currentPageIndex] && pages[currentPageIndex].backgroundImage) {
+        removeImageBtn.disabled = false;
+        removeImageBtn.classList.remove('visually-disabled');
     } else {
-        removeButton.style.display = "inline-flex";
+        removeImageBtn.disabled = true;
+        removeImageBtn.classList.add('visually-disabled');
     }
 }
 
 function loadPageIntoEditor(index) {
     currentPageIndex = index;
-    document.getElementById("bookWidth").value = bookData.bookWidth;
-    document.getElementById("bookHeight").value = bookData.bookHeight;
-    document.getElementById("coverColorInput").value = bookData.coverColor;
-    document.getElementById("backCoverColorInput").value = bookData.backCoverColor;
+
+    const bookWidthEl = document.getElementById("bookWidth");
+    const bookHeightEl = document.getElementById("bookHeight");
+    const pageBgColorEl = document.getElementById("pageBgColor");
+    const pageBgImageEl = document.getElementById("pageBgImage");
+    const bookSettingsGroup = document.getElementById("book-settings-group");
+    const pageBgTitle = document.getElementById("page-bg-title");
+    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
+
+    if (bookWidthEl) bookWidthEl.value = bookData.bookWidth;
+    if (bookHeightEl) bookHeightEl.value = bookData.bookHeight;
 
     const p = pages[index];
-    document.getElementById("pageBgColor").value = p.backgroundColor;
 
-    if (p.backgroundImage) {
-        if (p.backgroundImage.includes('data:')) {
-            document.getElementById("pageBgImage").textContent = "Embedded image";
+    if (pageBgTitle) {
+        if (index === 0) {
+            pageBgTitle.textContent = "Cover Background Color";
+        } else if (index === pages.length - 1) {
+            pageBgTitle.textContent = "Back Cover Background Color";
         } else {
-            document.getElementById("pageBgImage").textContent = p.backgroundImage.split('/').pop();
+            pageBgTitle.textContent = "Page Background Color";
         }
-    } else {
-        document.getElementById("pageBgImage").textContent = "No image selected";
     }
 
-    updateRemoveImageButtonState();
-
-    document.getElementById("book-settings-group").style.display = "block";
-    document.getElementById("cover-color-group").style.display = (index === 0) ? "block" : "none";
-    document.getElementById("back-cover-color-group").style.display = (index === pages.length - 1) ? "block" : "none";
-    document.getElementById("page-bg-color-group").style.display = (index !== 0 && index !== pages.length - 1) ? "block" : "none";
-    document.getElementById("page-bg-image-group").style.display = "block";
-
-    if (typeof quill !== 'undefined' && quill) {
-        quill.root.innerHTML = p.contentHtml || "";
-
-        setTimeout(() => {
-            quill.setSelection(0, quill.getLength());
-
-            if (p.alignment) {
-                quill.format('align', p.alignment);
-            }
-
-            quill.setSelection(null);
-        }, 10);
-
-        const editorContainer = document.getElementById("editor-container");
-        editorContainer.style.width = p.width + "px";
-        editorContainer.style.height = p.height + "px";
-
-        const contentWarning = document.getElementById('content-warning');
-        const globalContentWarning = document.getElementById('global-content-warning');
-
-        if (quill.root.scrollHeight > quill.root.clientHeight) {
-            if (contentWarning) contentWarning.style.display = 'block';
-            if (globalContentWarning) globalContentWarning.style.display = 'block';
+    if (pageBgColorEl) {
+        if (index === 0) {
+            p.backgroundColor = p.backgroundColor || bookData.coverColor || BOOK_CONSTANTS.DEFAULT_COVER_COLOR;
+            pageBgColorEl.value = p.backgroundColor;
+            bookData.coverColor = p.backgroundColor;
+        } else if (index === pages.length - 1) {
+            p.backgroundColor = p.backgroundColor || bookData.backCoverColor || BOOK_CONSTANTS.DEFAULT_BACK_COVER_COLOR;
+            pageBgColorEl.value = p.backgroundColor;
+            bookData.backCoverColor = p.backgroundColor;
         } else {
-            if (contentWarning) contentWarning.style.display = 'none';
-            if (globalContentWarning) globalContentWarning.style.display = 'none';
+            p.backgroundColor = p.backgroundColor || BOOK_CONSTANTS.DEFAULT_EDITOR_COLOR;
+            pageBgColorEl.value = p.backgroundColor;
         }
+        
+        const colorPreview = pageBgColorEl.nextElementSibling;
+        if (colorPreview && colorPreview.classList.contains('color-preview')) {
+            colorPreview.style.backgroundColor = pageBgColorEl.value;
+        }
+    }
+
+    if (backgroundColorGroup) {
+        backgroundColorGroup.style.display = p.backgroundImage ? "none" : "block";
+    }
+
+    if (p.backgroundImage) {
+        if (pageBgImageEl) {
+            if (p.backgroundImage.includes('data:')) {
+                pageBgImageEl.textContent = "Embedded image";
+            } else {
+                pageBgImageEl.textContent = p.backgroundImage.split('/').pop();
+            }
+        }
+        
+        const imagePreview = document.getElementById("image-preview");
+        if (imagePreview) {
+            imagePreview.style.backgroundImage = `url(${p.backgroundImage})`;
+            imagePreview.style.display = "block";
+        }
+    } else {
+        if (pageBgImageEl) pageBgImageEl.textContent = "No image selected";
+        
+        const imagePreview = document.getElementById("image-preview");
+        if (imagePreview) {
+            imagePreview.style.backgroundImage = '';
+            imagePreview.style.display = "none";
+        }
+    }
+
+    if (bookSettingsGroup) bookSettingsGroup.style.display = "block";
+
+    if (editor) {
+        editor.innerHTML = p.contentHtml || "";
+        
+        updateEditorColor();
     }
 
     updateInfoBar();
+    renderPageList();
+    updateRemoveImageButtonState();
 }
 
 function goPrev() {
@@ -540,33 +771,33 @@ function canSaveBook() {
 function validateAllPages() {
     return new Promise((resolve, reject) => {
         const issues = [];
-        
+
         saveEditorChanges();
-        
+
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'absolute';
         tempContainer.style.visibility = 'hidden';
         tempContainer.style.zIndex = '-1000';
         document.body.appendChild(tempContainer);
-        
+
         let processed = 0;
-        
+
         showValidationProgress();
-        
+
         pages.forEach((page, index) => {
             setTimeout(() => {
                 updateValidationProgress(processed + 1, pages.length);
-                
+
                 const pageIssues = validateSinglePage(page, index, tempContainer);
                 if (pageIssues.length > 0) {
                     issues.push(...pageIssues);
                 }
-                
+
                 processed++;
-                
+
                 if (processed === pages.length) {
                     document.body.removeChild(tempContainer);
-                    
+
                     if (issues.length > 0) {
                         hideValidationProgress();
                         reject(issues);
@@ -585,20 +816,20 @@ function validateAllPages() {
 function validateSinglePage(page, index, container) {
     const issues = [];
     const pageType = index === 0 ? "Front Cover" : (index === pages.length - 1 ? "Back Cover" : `Page ${index}`);
-    
+
     container.innerHTML = '';
     container.style.width = page.width + 'px';
     container.style.height = page.height + 'px';
     container.style.overflow = 'hidden';
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'ql-editor';
     contentDiv.style.height = '100%';
     contentDiv.style.overflow = 'hidden';
     contentDiv.innerHTML = page.contentHtml;
-    
+
     container.appendChild(contentDiv);
-    
+
     if (contentDiv.scrollHeight > contentDiv.clientHeight) {
         issues.push({
             page: index,
@@ -606,13 +837,13 @@ function validateSinglePage(page, index, container) {
             issue: 'Content exceeds page limits'
         });
     }
-    
+
     return issues;
 }
 
 function showValidationProgress() {
     let progressDialog = document.getElementById('validation-progress');
-    
+
     if (!progressDialog) {
         progressDialog = document.createElement('div');
         progressDialog.id = 'validation-progress';
@@ -633,7 +864,7 @@ function showValidationProgress() {
         `;
         document.body.appendChild(progressDialog);
     }
-    
+
     progressDialog.style.display = 'flex';
     setTimeout(() => {
         progressDialog.classList.add('show');
@@ -643,7 +874,7 @@ function showValidationProgress() {
 function updateValidationProgress(current, total) {
     const progressMessage = document.getElementById('validation-message');
     const progressBar = document.getElementById('validation-progress-bar');
-    
+
     if (progressMessage && progressBar) {
         progressMessage.textContent = `Checking pages: ${current}/${total}`;
         const percentage = (current / total) * 100;
@@ -653,7 +884,7 @@ function updateValidationProgress(current, total) {
 
 function hideValidationProgress() {
     const progressDialog = document.getElementById('validation-progress');
-    
+
     if (progressDialog) {
         progressDialog.classList.remove('show');
         setTimeout(() => {
@@ -664,20 +895,20 @@ function hideValidationProgress() {
 
 function showValidationErrors(issues) {
     let errorDialog = document.getElementById('validation-errors');
-    
+
     if (errorDialog) {
         document.body.removeChild(errorDialog);
     }
-    
+
     errorDialog = document.createElement('div');
     errorDialog.id = 'validation-errors';
     errorDialog.className = 'custom-dialog';
-    
+
     let errorListHTML = '';
     issues.forEach(issue => {
         errorListHTML += `<li><strong>${issue.pageType}</strong>: ${issue.issue}</li>`;
     });
-    
+
     errorDialog.innerHTML = `
         <div class="dialog-content">
             <div class="dialog-header">
@@ -697,21 +928,21 @@ function showValidationErrors(issues) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(errorDialog);
-    
+
     errorDialog.style.display = 'flex';
     setTimeout(() => {
         errorDialog.classList.add('show');
     }, 10);
-    
+
     document.getElementById('close-validation-errors').addEventListener('click', () => {
         hideValidationErrors();
     });
-    
+
     document.getElementById('validation-ok-btn').addEventListener('click', () => {
         hideValidationErrors();
-        
+
         if (issues.length > 0) {
             saveEditorChanges();
             loadPageIntoEditor(issues[0].page);
@@ -723,7 +954,7 @@ function showValidationErrors(issues) {
 
 function hideValidationErrors() {
     const errorDialog = document.getElementById('validation-errors');
-    
+
     if (errorDialog) {
         errorDialog.classList.remove('show');
         setTimeout(() => {
@@ -741,7 +972,7 @@ function downloadJSON() {
         notifications.tooltip(message, downloadBtn, 'error', 3000);
         return;
     }
-    
+
     validateAllPages()
         .then(() => {
             const data = {
@@ -879,49 +1110,6 @@ function initializeBookFromWizard() {
     }
 
     return false;
-}
-
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const imagePath = e.target.result;
-        document.getElementById("pageBgImage").textContent = file.name;
-
-        pages[currentPageIndex].backgroundImage = imagePath;
-
-        updateRemoveImageButtonState();
-
-        updateFlipBook();
-    };
-
-    reader.readAsDataURL(file);
-    event.target.value = '';
-}
-
-function resetDimensionsToDefault() {
-    const defaultWidth = 300;
-    const defaultHeight = 400;
-    const minWidth = 200;
-    const minHeight = 250;
-    const maxWidth = 500;
-    const maxHeight = 700;
-
-    let width = defaultWidth;
-    let height = defaultHeight;
-
-    width = Math.max(minWidth, Math.min(width, maxWidth));
-    height = Math.max(minHeight, Math.min(height, maxHeight));
-
-    document.getElementById("bookWidth").value = width;
-    document.getElementById("bookHeight").value = height;
-
-    bookData.bookWidth = width;
-    bookData.bookHeight = height;
-
-    updateAllPageDimensions();
 }
 
 document.getElementById('home-btn').addEventListener('click', function () {

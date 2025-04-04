@@ -21,7 +21,6 @@
 
 <body>
     <div id="left-panel">
-        <div class="panel-resize-handle" id="left-panel-resizer"></div>
         <div class="left-panel-header">
             <button id="home-btn" class="modern-button home-btn"><i class="ri-home-line"></i> Home</button>
         </div>
@@ -171,15 +170,7 @@
     </div>
 
     <div id="middle-panel">
-        <div id="info-bar">
-            <button id="toggle-left-panel" class="panel-toggle-btn left" title="Toggle Left Panel">
-                <i class="ri-arrow-left-s-line"></i>
-            </button>
-            <span id="info-bar-text"></span>
-            <button id="toggle-right-panel" class="panel-toggle-btn right" title="Toggle Right Panel">
-                <i class="ri-arrow-right-s-line"></i>
-            </button>
-        </div>
+        <div id="info-bar"></div>
         <div id="editor-wrapper">
             <div id="editor-container">
                 <div id="editor-inner" class="custom-editor"></div>
@@ -197,7 +188,6 @@
         </div>
     </div>
     <div id="right-panel">
-        <div class="panel-resize-handle" id="right-panel-resizer"></div>
         <div class="preview-controls">
             <div class="preview-label">Book Preview</div>
             <div class="zoom-actions">
@@ -262,8 +252,6 @@
     <script src="js/book.js"></script>
     <script src="js/preview.js"></script>
     <script src="js/ui-tabs.js"></script>
-    <script src="js/panel-toggle.js"></script>
-    <script src="js/panel-resize.js"></script>
     <script src="js/main.js"></script>
     <script src="js/constants.js"></script>
     <script src="js/debug-utils.js"></script>

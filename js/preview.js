@@ -5,98 +5,244 @@ let isDragging = false;
 let startX, startY, translateX = 0, translateY = 0;
 let lastTranslateX = 0, lastTranslateY = 0;
 
+/**
+ * Actualiza la visualización del libro en tiempo real
+ */
 function updateFlipBook() {
     const fb = document.getElementById("flip-book");
-    fb.innerHTML = "";
-    if (pages.length === 0) return;
-
-    fb.style.width = bookData.bookWidth + "px";
-    fb.style.height = bookData.bookHeight + "px";
-
-    for (let i = 0; i < pages.length; i++) {
-        const pageDiv = document.createElement("div");
-        pageDiv.className = "page";
-        pageDiv.style.width = bookData.bookWidth + "px";
-        pageDiv.style.height = bookData.bookHeight + "px";
-
-        let bgColor = pages[i].backgroundColor;
-        if (i === 0) {
-            bgColor = bookData.coverColor;
-        } else if (i === pages.length - 1) {
-            bgColor = bookData.backCoverColor;
-        }
-
-        const contentDiv = document.createElement("div");
-        contentDiv.className = "page-content ql-editor";
-        contentDiv.innerHTML = pages[i].contentHtml;
-        contentDiv.style.backgroundColor = bgColor;
-
-        if (pages[i].backgroundImage) {
-            contentDiv.style.backgroundImage = "url('" + pages[i].backgroundImage + "')";
-            contentDiv.style.backgroundSize = "cover";
-            contentDiv.style.backgroundPosition = "center";
-        }
-
-        pageDiv.appendChild(contentDiv);
-
-        if (i < currentPageIndex) {
-            pageDiv.style.transform = "rotateY(-180deg)";
-        } else {
-            pageDiv.style.transform = "rotateY(0deg)";
-        }
-
-        pageDiv.style.zIndex = pages.length - i;
-        fb.appendChild(pageDiv);
-    }
-
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-
-    if (prevPageBtn && nextPageBtn) {
-        prevPageBtn.disabled = currentPageIndex === 0;
-        nextPageBtn.disabled = currentPageIndex === pages.length - 1;
-    }
-
-    updateInfoBar();
-    updateRemoveImageButtonState();
+    if (!fb) return;
     
-    // Reset zoom and position when dimensions change
-    calculateAutoZoom();
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+    const fragment = document.createDocumentFragment();
+    if (pages.length === 0) {
+        fb.innerHTML = "";
+        return;
+    }
+
+    if (fb.style.width !== `${bookData.bookWidth}px` || fb.style.height !== `${bookData.bookHeight}px`) {
+        fb.style.width = bookData.bookWidth + "px";
+        fb.style.height = bookData.bookHeight + "px";
+    }
+    
+    const needsRebuild = fb.children.length !== pages.length;
+    
+    if (needsRebuild) {
+        fb.innerHTML = "";
+        
+        for (let i = 0; i < pages.length; i++) {
+            const pageDiv = createPageElement(i);
+            fragment.appendChild(pageDiv);
+        }
+        
+        fb.appendChild(fragment);
+        const pageElements = fb.querySelectorAll('.page');
+        positionPages(pageElements);
+    } else {
+        for (let i = 0; i < pages.length; i++) {
+            updatePageElement(fb.children[i], i);
+        }
+    }
+    
+    updatePageNumbers();
+    
+    window.scrollTo(0, scrollTop);
+}
+
+function createPageElement(index) {
+    const page = pages[index];
+    const pageDiv = document.createElement("div");
+    pageDiv.className = "page";
+    pageDiv.setAttribute("data-page-index", index);
+    pageDiv.style.width = bookData.bookWidth + "px";
+    pageDiv.style.height = bookData.bookHeight + "px";
+
+    let bgColor;
+    if (index === 0) {
+        bgColor = page.backgroundColor || bookData.coverColor || BOOK_CONSTANTS.DEFAULT_COVER_COLOR;
+    } else if (index === pages.length - 1) {
+        bgColor = page.backgroundColor || bookData.backCoverColor || BOOK_CONSTANTS.DEFAULT_BACK_COVER_COLOR;
+    } else {
+        bgColor = page.backgroundColor || BOOK_CONSTANTS.DEFAULT_EDITOR_COLOR;
+    }
+    
+    pageDiv.style.backgroundColor = bgColor;
+
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "page-content";
+    
+    if (page.backgroundImage) {
+        pageDiv.setAttribute('data-bg-image', page.backgroundImage);
+        pageDiv.classList.add('has-bg-image');
+    }
+    
+    if (page.contentHtml) {
+        contentDiv.innerHTML = page.contentHtml;
+    }
+    
+    pageDiv.appendChild(contentDiv);
+    return pageDiv;
+}
+
+function updatePageElement(pageDiv, index) {
+    const page = pages[index];
+    
+    if (pageDiv.style.width !== `${bookData.bookWidth}px`) {
+        pageDiv.style.width = bookData.bookWidth + "px";
+    }
+    
+    if (pageDiv.style.height !== `${bookData.bookHeight}px`) {
+        pageDiv.style.height = bookData.bookHeight + "px";
+    }
+
+    let bgColor;
+    if (index === 0) {
+        bgColor = page.backgroundColor || bookData.coverColor || BOOK_CONSTANTS.DEFAULT_COVER_COLOR;
+    } else if (index === pages.length - 1) {
+        bgColor = page.backgroundColor || bookData.backCoverColor || BOOK_CONSTANTS.DEFAULT_BACK_COVER_COLOR;
+    } else {
+        bgColor = page.backgroundColor || BOOK_CONSTANTS.DEFAULT_EDITOR_COLOR;
+    }
+    
+    if (pageDiv.style.backgroundColor !== bgColor) {
+        pageDiv.style.backgroundColor = bgColor;
+    }
+
+    const contentDiv = pageDiv.querySelector('.page-content');
+    if (contentDiv && page.contentHtml !== contentDiv.innerHTML) {
+        contentDiv.innerHTML = page.contentHtml || '';
+    }
+    
+    const currentBgImage = pageDiv.getAttribute('data-bg-image') || '';
+    if (page.backgroundImage && currentBgImage !== page.backgroundImage) {
+        pageDiv.setAttribute('data-bg-image', page.backgroundImage);
+        pageDiv.classList.add('has-bg-image');
+        pageDiv.style.backgroundImage = `url(${page.backgroundImage})`;
+    } else if (!page.backgroundImage && currentBgImage) {
+        pageDiv.removeAttribute('data-bg-image');
+        pageDiv.classList.remove('has-bg-image');
+        pageDiv.style.backgroundImage = '';
+        
+        if (page.backgroundColor) {
+            pageDiv.style.backgroundColor = page.backgroundColor;
+        } else {
+            pageDiv.style.backgroundColor = '#FFFFFF';
+        }
+    }
+}
+
+/**
+ * Positions all pages in the book with proper z-index and visibility
+ * @param {NodeList} pageElements - The DOM elements representing pages
+ */
+function positionPages(pageElements) {
+    if (!pageElements || !pageElements.length) return;
+    
+    pageElements.forEach((page, i) => {
+        page.style.transition = '';
+        
+        if (i === currentPageIndex) {
+            page.style.opacity = '1';
+            page.style.transform = 'translateY(0)';
+            page.style.zIndex = '10';
+        } else {
+            page.style.opacity = '0';
+            page.style.transform = i < currentPageIndex ? 'translateY(-30px)' : 'translateY(30px)';
+            page.style.zIndex = i < currentPageIndex ? '5' : '1';
+        }
+    });
+}
+
+/**
+ * Updates page numbers in the preview
+ */
+function updatePageNumbers() {
+}
+
+/**
+ * Animates the page transition with a smooth slide effect
+ * @param {number} fromIndex - Index of the source page
+ * @param {number} toIndex - Index of the destination page
+ */
+function animatePageTurn(fromIndex, toIndex) {
+    const flipBook = document.getElementById('flip-book');
+    if (!flipBook) return;
+    
+    const pages = flipBook.querySelectorAll('.page');
+    if (pages.length === 0) return;
+    
+    const isForward = toIndex > fromIndex;
+    
+    pages.forEach((page, idx) => {
+        if (idx !== fromIndex && idx !== toIndex) {
+            page.style.opacity = '0';
+            page.style.zIndex = '1';
+        }
+    });
+    
+    const leavingPage = pages[fromIndex];
+    leavingPage.style.zIndex = '10';
+    leavingPage.style.opacity = '1';
+    
+    const enteringPage = pages[toIndex];
+    enteringPage.style.zIndex = '5';
+    enteringPage.style.opacity = '0';
+    enteringPage.style.transform = isForward ? 'translateY(30px)' : 'translateY(-30px)';
+    
+    setTimeout(() => {
+        leavingPage.classList.add('transitioning');
+        leavingPage.style.opacity = '0';
+        leavingPage.style.transform = isForward ? 'translateY(-30px)' : 'translateY(30px)';
+        
+        setTimeout(() => {
+            enteringPage.classList.add('transitioning');
+            enteringPage.style.opacity = '1';
+            enteringPage.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                pages.forEach(page => {
+                    page.classList.remove('transitioning');
+                });
+                positionPages(pages);
+                
+                const event = new CustomEvent('pagetransitioned', { 
+                    detail: { from: fromIndex, to: toIndex } 
+                });
+                document.dispatchEvent(event);
+            }, 300);
+        }, 150);
+    }, 50);
+}
+
+function setupPageIndexObserver() {
+    const originalLoadPageIntoEditor = window.loadPageIntoEditor || function(){};
+    
+    window.loadPageIntoEditor = function(index) {
+        const oldIndex = currentPageIndex;
+        
+        originalLoadPageIntoEditor(index);
+        
+        if (oldIndex !== index) {
+            animatePageTurn(oldIndex, index);
+        }
+    };
 }
 
 function initZoomControls() {
     const zoomSlider = document.getElementById('zoom-slider');
     const zoomOut = document.getElementById('zoom-out');
     const zoomIn = document.getElementById('zoom-in');
-    const zoomInput = document.getElementById('zoom-input');
+    const zoomValue = document.getElementById('zoom-value');
     const resetZoom = document.getElementById('reset-zoom');
     const centerBook = document.getElementById('center-book');
     const flipBookContainer = document.getElementById('flip-book-container');
     const flipBook = document.getElementById('flip-book');
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-
+    
     calculateAutoZoom();
 
     zoomSlider.addEventListener('input', function () {
         currentZoom = parseInt(this.value);
-        zoomInput.value = currentZoom;
-        updateZoom();
-    });
-
-    zoomInput.addEventListener('input', function () {
-        let value = this.value.replace(/[^\d]/g, '');
-        if (value === '') value = '100';
-        this.value = value;
-    });
-
-    zoomInput.addEventListener('change', function () {
-        let value = parseInt(this.value);
-        if (isNaN(value) || value < minZoom) value = minZoom;
-        if (value > maxZoom) value = maxZoom;
-        currentZoom = value;
-        this.value = value;
-        zoomSlider.value = value;
+        if (zoomValue) zoomValue.textContent = currentZoom;
         updateZoom();
     });
 
@@ -104,7 +250,7 @@ function initZoomControls() {
         if (currentZoom > minZoom) {
             currentZoom = Math.max(minZoom, currentZoom - 10);
             zoomSlider.value = currentZoom;
-            zoomInput.value = currentZoom;
+            if (zoomValue) zoomValue.textContent = currentZoom;
             updateZoom();
         }
     });
@@ -113,7 +259,7 @@ function initZoomControls() {
         if (currentZoom < maxZoom) {
             currentZoom = Math.min(maxZoom, currentZoom + 10);
             zoomSlider.value = currentZoom;
-            zoomInput.value = currentZoom;
+            if (zoomValue) zoomValue.textContent = currentZoom;
             updateZoom();
         }
     });
@@ -121,7 +267,7 @@ function initZoomControls() {
     resetZoom.addEventListener('click', function () {
         calculateAutoZoom();
         zoomSlider.value = currentZoom;
-        zoomInput.value = currentZoom;
+        if (zoomValue) zoomValue.textContent = currentZoom;
         updateZoom();
     });
 
@@ -150,7 +296,7 @@ function initZoomControls() {
         }
 
         zoomSlider.value = currentZoom;
-        zoomInput.value = currentZoom;
+        if (zoomValue) zoomValue.textContent = currentZoom;
 
         const zoomRatio = currentZoom / oldZoom;
         const containerRect = flipBookContainer.getBoundingClientRect();
@@ -228,18 +374,6 @@ function initZoomControls() {
         return false;
     });
 
-    prevPageBtn.addEventListener('click', function () {
-        if (currentPageIndex > 0) {
-            goPrev();
-        }
-    });
-
-    nextPageBtn.addEventListener('click', function () {
-        if (currentPageIndex < pages.length - 1) {
-            goNext();
-        }
-    });
-
     window.addEventListener('resize', calculateAutoZoom);
 }
 
@@ -264,8 +398,11 @@ function calculateAutoZoom() {
 
     if (Math.abs(currentZoom - autoZoom) > 2) {
         currentZoom = autoZoom;
-        document.getElementById('zoom-slider').value = currentZoom;
-        document.getElementById('zoom-input').value = currentZoom;
+        const zoomSlider = document.getElementById('zoom-slider');
+        const zoomValue = document.getElementById('zoom-value');
+        
+        if (zoomSlider) zoomSlider.value = currentZoom;
+        if (zoomValue) zoomValue.textContent = currentZoom;
 
         translateX = 0;
         translateY = 0;
@@ -291,14 +428,35 @@ function updatePosition() {
 
 function updateSliderProgress() {
     const slider = document.getElementById('zoom-slider');
+    const zoomValue = document.getElementById('zoom-value');
+    
+    if (!slider) return;
+    
     const min = parseInt(slider.min);
     const max = parseInt(slider.max);
     const value = parseInt(slider.value);
     const progress = ((value - min) / (max - min)) * 100;
     slider.style.setProperty('--progress', `${progress}%`);
+    
+    if (zoomValue && value !== parseInt(zoomValue.textContent)) {
+        zoomValue.textContent = value;
+    }
+    
+    const zoomControls = document.querySelector('.advanced-zoom-controls');
+    const rightPanel = document.getElementById('right-panel');
+    
+    if (zoomControls && rightPanel) {
+        const panelWidth = rightPanel.offsetWidth;
+        
+        if (panelWidth < 200) {
+            zoomControls.classList.add('compact-layout');
+        } else {
+            zoomControls.classList.remove('compact-layout');
+        }
+    }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const slider = document.getElementById('zoom-slider');
     if (slider) {
         slider.addEventListener('input', updateSliderProgress);
@@ -309,64 +467,41 @@ document.addEventListener('DOMContentLoaded', function() {
 function enhanceZoomControls() {
     const zoomControls = document.querySelector('.advanced-zoom-controls');
     const zoomSlider = document.getElementById('zoom-slider');
-    const zoomInput = document.getElementById('zoom-input');
-    
-    if (zoomControls && zoomSlider && zoomInput) {
+
+    if (zoomControls && zoomSlider) {
         zoomSlider.addEventListener('mouseenter', () => {
             zoomControls.style.boxShadow = '0 5px 15px rgba(0, 120, 215, 0.2)';
         });
-        
+
         zoomSlider.addEventListener('mouseleave', () => {
-            if (document.activeElement !== zoomInput) {
-                zoomControls.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.3)';
-            }
-        });
-        
-        zoomInput.addEventListener('focus', () => {
-            zoomControls.style.boxShadow = '0 5px 15px rgba(0, 120, 215, 0.2)';
-        });
-        
-        zoomInput.addEventListener('blur', () => {
             zoomControls.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.3)';
         });
     }
-}
-
-document.addEventListener('DOMContentLoaded', enhanceZoomControls);
-
-document.addEventListener('DOMContentLoaded', function() {
+    
+    window.addEventListener('resize', updateSliderProgress);
+    
     updateSliderProgress();
-    
-    const slider = document.getElementById('zoom-slider');
-    if (slider) {
-        slider.addEventListener('input', updateSliderProgress);
-    }
-    
-    const zoomInput = document.getElementById('zoom-input');
-    if (zoomInput) {
-        zoomInput.addEventListener('change', updateSliderProgress);
-    }
-});
+}
 
 function addButtonFeedback() {
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const resetZoom = document.getElementById('reset-zoom');
     const centerBook = document.getElementById('center-book');
-    
+
     if (zoomIn && zoomOut && resetZoom && centerBook) {
         [zoomIn, zoomOut, resetZoom, centerBook].forEach(button => {
-            button.addEventListener('mousedown', function() {
+            button.addEventListener('mousedown', function () {
                 this.style.transform = 'scale(0.95)';
                 this.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.2)';
             });
-            
-            button.addEventListener('mouseup', function() {
+
+            button.addEventListener('mouseup', function () {
                 this.style.transform = '';
                 this.style.boxShadow = '';
             });
-            
-            button.addEventListener('mouseleave', function() {
+
+            button.addEventListener('mouseleave', function () {
                 if (this.style.transform === 'scale(0.95)') {
                     this.style.transform = '';
                     this.style.boxShadow = '';
@@ -377,3 +512,45 @@ function addButtonFeedback() {
 }
 
 document.addEventListener('DOMContentLoaded', addButtonFeedback);
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!document.getElementById('page-transition-styles')) {
+        const style = document.createElement('style');
+        style.id = 'page-transition-styles';
+        style.textContent = `
+            .page {
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+            .page.transitioning {
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    setupPageIndexObserver();
+    
+    initZoomControls();
+    
+    const pageList = document.getElementById('page-list');
+    if (pageList) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList' || 
+                    (mutation.type === 'attributes' && mutation.attributeName === 'class')) {
+                    const selectedPage = pageList.querySelector('.page-item.selected');
+                    if (selectedPage) {
+                        updateFlipBook();
+                    }
+                }
+            });
+        });
+        
+        observer.observe(pageList, { 
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    }
+});

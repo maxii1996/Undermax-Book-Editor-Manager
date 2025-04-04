@@ -1,4 +1,3 @@
-/* Welcome Screen Styles */
 .welcome-body {
     background: #1E1E1E;
     display: flex;
@@ -243,7 +242,6 @@
     text-decoration: underline;
 }
 
-/* Wizard Styles */
 .wizard-container {
     position: fixed;
     top: 50%;

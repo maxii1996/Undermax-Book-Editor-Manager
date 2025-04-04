@@ -198,4 +198,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     setupColorObservers();
+
+    function updateInitialButtonState() {
+        if (window.bookData) {
+            const coverRemoveBtn = document.getElementById('cover-image-remove-btn');
+            if (coverRemoveBtn) {
+                coverRemoveBtn.style.display = 
+                    (window.bookData.coverType === 'image' && window.bookData.coverImage) ? 
+                    'inline-flex' : 'none';
+            }
+            
+            const backCoverRemoveBtn = document.getElementById('back-cover-image-remove-btn');
+            if (backCoverRemoveBtn) {
+                backCoverRemoveBtn.style.display = 
+                    (window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) ? 
+                    'inline-flex' : 'none';
+            }
+        }
+    }
+
+    updateInitialButtonState();
 });

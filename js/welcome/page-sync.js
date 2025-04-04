@@ -15,20 +15,31 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (typeof window.updatePagesVisual === 'function') {
             window.updatePagesVisual();
         } else {
-            console.warn('La función updatePagesVisual no está disponible');
+            console.warn('La función updatePagesVisual no está disponible, intentando cargar desde welcome-wizard.js');
             
-            if (typeof updatePageIcons === 'function') {
-                const pageCount = parseInt(document.getElementById('wizard-page-count').value) || 1;
-                updatePageIcons(pageCount);
-            } else if (window.bookData && typeof window.bookData.pageCount !== 'undefined') {
-                const pageCountElement = document.getElementById('wizard-page-count');
-                if (pageCountElement) {
-                    const pageCount = parseInt(pageCountElement.value) || window.bookData.pageCount || 1;
-                    if (typeof window.updatePageIcons === 'function') {
-                        window.updatePageIcons(pageCount);
+            const script = document.createElement('script');
+            script.src = 'js/welcome/welcome-wizard.js';
+            script.onload = function() {
+                if (typeof window.updatePagesVisual === 'function') {
+                    window.updatePagesVisual();
+                } else {
+                    console.error('No se pudo cargar updatePagesVisual incluso después de cargar el script');
+                    
+                    if (typeof updatePageIcons === 'function') {
+                        const pageCount = parseInt(document.getElementById('wizard-page-count').value) || 1;
+                        updatePageIcons(pageCount);
+                    } else if (window.bookData && typeof window.bookData.pageCount !== 'undefined') {
+                        const pageCountElement = document.getElementById('wizard-page-count');
+                        if (pageCountElement) {
+                            const pageCount = parseInt(pageCountElement.value) || window.bookData.pageCount || 1;
+                            if (typeof window.updatePageIcons === 'function') {
+                                window.updatePageIcons(pageCount);
+                            }
+                        }
                     }
                 }
-            }
+            };
+            document.head.appendChild(script);
         }
     }
     

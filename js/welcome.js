@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const coverImageBtn = document.getElementById('cover-image-btn');
     const coverImageInput = document.getElementById('cover-image-input');
     const coverImageName = document.getElementById('cover-image-name');
+    const coverImageRemoveBtn = document.getElementById('cover-image-remove-btn');
 
     document.getElementById('cover-color').addEventListener('change', function () {
         bookData.coverType = 'color';
@@ -80,11 +81,13 @@ document.addEventListener('DOMContentLoaded', function () {
         this.closest('.cover-option').classList.add('selected');
         updateCoverPreview();
         updatePageIcons(bookData.pageCount);
+        updateCoverRemoveButtonVisibility();
     });
 
     document.getElementById('cover-image').addEventListener('change', function () {
         bookData.coverType = 'image';
         updateCoverPreview();
+        updateCoverRemoveButtonVisibility();
     });
 
     coverColorInput.addEventListener('input', function () {
@@ -148,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 bookData.coverImage = e.target.result;
                 updateCoverPreview();
                 updatePageIcons(bookData.pageCount);
+                updateCoverRemoveButtonVisibility();
 
                 const radioEvent = new Event('change');
                 document.getElementById('cover-image').dispatchEvent(radioEvent);
@@ -156,11 +160,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    coverImageRemoveBtn.addEventListener('click', function () {
+        bookData.coverImage = '';
+        coverImageName.textContent = 'No image selected';
+        document.getElementById('cover-color').checked = true;
+        bookData.coverType = 'color';
+
+        const radioEvent = new Event('change');
+        document.getElementById('cover-color').dispatchEvent(radioEvent);
+
+        updateCoverPreview();
+        updatePageIcons(bookData.pageCount);
+        updateCoverRemoveButtonVisibility();
+    });
+
+    function updateCoverRemoveButtonVisibility() {
+        if (bookData.coverType === 'image' && bookData.coverImage) {
+            coverImageRemoveBtn.style.display = 'inline-flex';
+        } else {
+            coverImageRemoveBtn.style.display = 'none';
+        }
+    }
+
     const backCoverColorInput = document.getElementById('wizard-back-cover-color');
     const backCoverColorPreview = document.getElementById('back-cover-color-preview');
     const backCoverImageBtn = document.getElementById('back-cover-image-btn');
     const backCoverImageInput = document.getElementById('back-cover-image-input');
     const backCoverImageName = document.getElementById('back-cover-image-name');
+    const backCoverImageRemoveBtn = document.getElementById('back-cover-image-remove-btn');
 
     document.getElementById('back-cover-color').addEventListener('change', function () {
         bookData.backCoverType = 'color';
@@ -170,11 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
         this.closest('.cover-option').classList.add('selected');
         updateBackCoverPreview();
         updatePageIcons(bookData.pageCount);
+        updateBackCoverRemoveButtonVisibility();
     });
 
     document.getElementById('back-cover-image').addEventListener('change', function () {
         bookData.backCoverType = 'image';
         updateBackCoverPreview();
+        updateBackCoverRemoveButtonVisibility();
     });
 
     function updateBackCoverPreview() {
@@ -238,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 bookData.backCoverImage = e.target.result;
                 updateBackCoverPreview();
                 updatePageIcons(bookData.pageCount);
+                updateBackCoverRemoveButtonVisibility();
 
                 const radioEvent = new Event('change');
                 document.getElementById('back-cover-image').dispatchEvent(radioEvent);
@@ -245,6 +275,28 @@ document.addEventListener('DOMContentLoaded', function () {
             reader.readAsDataURL(file);
         }
     });
+
+    backCoverImageRemoveBtn.addEventListener('click', function () {
+        bookData.backCoverImage = '';
+        backCoverImageName.textContent = 'No image selected';
+        document.getElementById('back-cover-color').checked = true;
+        bookData.backCoverType = 'color';
+
+        const radioEvent = new Event('change');
+        document.getElementById('back-cover-color').dispatchEvent(radioEvent);
+
+        updateBackCoverPreview();
+        updatePageIcons(bookData.pageCount);
+        updateBackCoverRemoveButtonVisibility();
+    });
+
+    function updateBackCoverRemoveButtonVisibility() {
+        if (bookData.backCoverType === 'image' && bookData.backCoverImage) {
+            backCoverImageRemoveBtn.style.display = 'inline-flex';
+        } else {
+            backCoverImageRemoveBtn.style.display = 'none';
+        }
+    }
 
     const pageCountInput = document.getElementById('wizard-page-count');
     const pageIconsContainer = document.getElementById('pages-visual-container');
@@ -421,22 +473,24 @@ document.addEventListener('DOMContentLoaded', function () {
             contentHtml: "<p>The End</p>"
         });
 
-        const newBookData = {
+        localStorage.setItem('newBookWizardData', JSON.stringify({
             bookName: bookData.name,
             bookWidth: bookData.width,
             bookHeight: bookData.height,
             coverColor: bookData.coverColor,
+            coverType: bookData.coverType,
+            coverImage: bookData.coverImage,
             backCoverColor: bookData.backCoverColor,
+            backCoverType: bookData.backCoverType,
+            backCoverImage: bookData.backCoverImage,
             pages: pages
-        };
+        }));
 
-        sessionStorage.setItem('newBookWizardData', JSON.stringify(newBookData));
-
-        notifications.success('Book created successfully!');
-
+        console.log("Datos del libro guardados, redirigiendo al editor...");
+        
         setTimeout(() => {
             window.location.href = 'index.html?newBook=true';
-        }, 1000);
+        }, 100);
     }
 
     function loadBookFile(file) {
@@ -485,6 +539,8 @@ document.addEventListener('DOMContentLoaded', function () {
         setupDualPreview();
         addCoverFloatingEffect();
         setupModernRadioButtons();
+        updateCoverRemoveButtonVisibility();
+        updateBackCoverRemoveButtonVisibility();
     }
 
 
@@ -579,6 +635,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             this.closest('.cover-option').classList.add('selected');
             bookData.coverType = 'color';
+            updateCoverRemoveButtonVisibility();
         });
 
         document.getElementById('cover-image').addEventListener('change', function () {
@@ -587,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             this.closest('.cover-option').classList.add('selected');
             bookData.coverType = 'image';
+            updateCoverRemoveButtonVisibility();
         });
 
         document.getElementById('back-cover-color').addEventListener('change', function () {
@@ -595,6 +653,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             this.closest('.cover-option').classList.add('selected');
             bookData.backCoverType = 'color';
+            updateBackCoverRemoveButtonVisibility();
         });
 
         document.getElementById('back-cover-image').addEventListener('change', function () {
@@ -603,6 +662,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             this.closest('.cover-option').classList.add('selected');
             bookData.backCoverType = 'image';
+            updateBackCoverRemoveButtonVisibility();
         });
 
         if (document.getElementById('cover-color').checked) {
@@ -631,6 +691,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.closest('.cover-option').classList.add('selected');
 
             updateCoverPreview();
+            updateCoverRemoveButtonVisibility();
         }
     });
 
@@ -649,6 +710,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.closest('.cover-option').classList.add('selected');
 
             updateBackCoverPreview();
+            updateBackCoverRemoveButtonVisibility();
         }
     });
 });
@@ -720,14 +782,72 @@ function createBookFromWizard() {
         pages: pages
     };
     
-    localStorage.setItem('newBookWizardData', JSON.stringify(bookData));
+    let storageSuccess = false;
+    if (window.BookImageUtils) {
+        const bookDataJson = JSON.stringify(bookData);
+        storageSuccess = BookImageUtils.safelyStoreData('newBookWizardData', bookDataJson, handleCreateBookError);
+    } else {
+        try {
+            localStorage.setItem('newBookWizardData', JSON.stringify(bookData));
+            storageSuccess = true;
+        } catch (error) {
+            handleCreateBookError(error);
+        }
+    }
     
-    console.log(`Se han guardado en localStorage ${pages.length} páginas`);
-    console.log('Datos de libro guardados:', bookData);
+    if (storageSuccess) {
+        console.log(`Se han guardado en localStorage ${pages.length} páginas`);
+        console.log('Datos de libro guardados:', bookData);
+        
+        sessionStorage.setItem('fromWelcome', 'true');
+        
+        setTimeout(() => {
+            window.location.href = 'index.html?newBook=true';
+        }, 100);
+    }
+}
+
+function handleCreateBookError(error) {
+    const isQuotaError = error.name === 'QuotaExceededError' || 
+                         error.name === 'NS_ERROR_DOM_QUOTA_REACHED';
     
-    sessionStorage.setItem('fromWelcome', 'true');
-    
-    setTimeout(() => {
-        window.location.href = 'index.html?newBook=true';
-    }, 100);
+    if (isQuotaError) {
+        try {
+            sessionStorage.setItem('newBookWizardData', JSON.stringify(window.bookData));
+            sessionStorage.setItem('useSessionStorage', 'true');
+            
+            if (window.notifications) {
+                window.notifications.warning(
+                    "Your book is too large for persistent storage. " +
+                    "It will be available for this session only. " +
+                    "Consider using smaller images in the future."
+                );
+            } else {
+                alert("Storage limit exceeded. Using temporary storage instead. Your book will be available for this session only.");
+            }
+            
+            setTimeout(() => {
+                window.location.href = 'index.html?newBook=true&useSessionStorage=true';
+            }, 1500);
+            
+        } catch (sessionError) {
+            console.error('SessionStorage fallback failed:', sessionError);
+            
+            if (window.notifications) {
+                window.notifications.error(
+                    "Unable to create book due to image size limitations. " +
+                    "Please use smaller images or fewer pages."
+                );
+            } else {
+                alert("Unable to create book due to storage limitations. Please use smaller images or fewer pages.");
+            }
+        }
+    } else {
+        console.error('Error creating book:', error);
+        if (window.notifications) {
+            window.notifications.error("Failed to create book: " + error.message);
+        } else {
+            alert("Failed to create book: " + error.message);
+        }
+    }
 }

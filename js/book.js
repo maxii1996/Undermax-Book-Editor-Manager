@@ -665,6 +665,12 @@ function loadPageIntoEditor(index) {
     if (bookHeightEl) bookHeightEl.value = bookData.bookHeight;
 
     const p = pages[index];
+    
+    if (!p) {
+        console.error("Failed to load page at index:", index);
+        notifications.error("Failed to load page. The page may be corrupted.");
+        return;
+    }
 
     if (pageBgTitle) {
         if (index === 0) {
@@ -696,23 +702,40 @@ function loadPageIntoEditor(index) {
         }
     }
 
-    if (backgroundColorGroup) {
-        backgroundColorGroup.style.display = p.backgroundImage ? "none" : "block";
-    }
-
-    if (p.backgroundImage) {
-        if (pageBgImageEl) {
-            if (p.backgroundImage.includes('data:')) {
-                pageBgImageEl.textContent = "Embedded image";
-            } else {
-                pageBgImageEl.textContent = p.backgroundImage.split('/').pop();
+    if (typeof p.backgroundImage === 'string' && p.backgroundImage.trim() !== '') {
+        try {
+            if (pageBgImageEl) {
+                if (p.backgroundImage.includes('data:')) {
+                    pageBgImageEl.textContent = "Embedded image";
+                } else {
+                    pageBgImageEl.textContent = p.backgroundImage.split('/').pop();
+                }
             }
-        }
-        
-        const imagePreview = document.getElementById("image-preview");
-        if (imagePreview) {
-            imagePreview.style.backgroundImage = `url(${p.backgroundImage})`;
-            imagePreview.style.display = "block";
+            
+            const imagePreview = document.getElementById("image-preview");
+            if (imagePreview) {
+                imagePreview.style.backgroundImage = `url(${p.backgroundImage})`;
+                imagePreview.style.display = "block";
+            }
+            
+            if (backgroundColorGroup) {
+                backgroundColorGroup.style.display = "none";
+            }
+        } catch (e) {
+            console.error("Error loading background image:", e);
+            if (pageBgImageEl) pageBgImageEl.textContent = "Error loading image";
+            
+            p.backgroundImage = '';
+            
+            const imagePreview = document.getElementById("image-preview");
+            if (imagePreview) {
+                imagePreview.style.backgroundImage = '';
+                imagePreview.style.display = "none";
+            }
+            
+            if (backgroundColorGroup) {
+                backgroundColorGroup.style.display = "block";
+            }
         }
     } else {
         if (pageBgImageEl) pageBgImageEl.textContent = "No image selected";
@@ -722,19 +745,22 @@ function loadPageIntoEditor(index) {
             imagePreview.style.backgroundImage = '';
             imagePreview.style.display = "none";
         }
+        
+        if (backgroundColorGroup) {
+            backgroundColorGroup.style.display = "block";
+        }
     }
 
     if (bookSettingsGroup) bookSettingsGroup.style.display = "block";
 
     if (editor) {
         editor.innerHTML = p.contentHtml || "";
-        
         updateEditorColor();
     }
 
     updateInfoBar();
-    renderPageList();
     updateRemoveImageButtonState();
+    updateFlipBook();
 }
 
 function goPrev() {
@@ -743,6 +769,10 @@ function goPrev() {
         loadPageIntoEditor(currentPageIndex - 1);
         renderPageList();
         updateFlipBook();
+        
+        if (typeof updateNavigationButtonsState === 'function') {
+            updateNavigationButtonsState();
+        }
     }
 }
 
@@ -752,6 +782,10 @@ function goNext() {
         loadPageIntoEditor(currentPageIndex + 1);
         renderPageList();
         updateFlipBook();
+        
+        if (typeof updateNavigationButtonsState === 'function') {
+            updateNavigationButtonsState();
+        }
     }
 }
 

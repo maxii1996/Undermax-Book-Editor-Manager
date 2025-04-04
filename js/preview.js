@@ -71,9 +71,17 @@ function createPageElement(index) {
     const contentDiv = document.createElement("div");
     contentDiv.className = "page-content";
     
-    if (page.backgroundImage) {
-        pageDiv.setAttribute('data-bg-image', page.backgroundImage);
-        pageDiv.classList.add('has-bg-image');
+    if (page.backgroundImage && typeof page.backgroundImage === 'string' && page.backgroundImage.trim() !== '') {
+        try {
+            pageDiv.setAttribute('data-bg-image', page.backgroundImage);
+            pageDiv.classList.add('has-bg-image');
+            pageDiv.style.backgroundImage = `url(${page.backgroundImage})`;
+        } catch(e) {
+            console.error("Error setting background image for page", index, e);
+            pageDiv.style.backgroundImage = '';
+            pageDiv.removeAttribute('data-bg-image');
+            pageDiv.classList.remove('has-bg-image');
+        }
     }
     
     if (page.contentHtml) {
@@ -113,21 +121,28 @@ function updatePageElement(pageDiv, index) {
         contentDiv.innerHTML = page.contentHtml || '';
     }
     
-    const currentBgImage = pageDiv.getAttribute('data-bg-image') || '';
-    if (page.backgroundImage && currentBgImage !== page.backgroundImage) {
-        pageDiv.setAttribute('data-bg-image', page.backgroundImage);
-        pageDiv.classList.add('has-bg-image');
-        pageDiv.style.backgroundImage = `url(${page.backgroundImage})`;
-    } else if (!page.backgroundImage && currentBgImage) {
+    try {
+        const currentBgImage = pageDiv.getAttribute('data-bg-image') || '';
+        if (page.backgroundImage && typeof page.backgroundImage === 'string' && currentBgImage !== page.backgroundImage) {
+            pageDiv.setAttribute('data-bg-image', page.backgroundImage);
+            pageDiv.classList.add('has-bg-image');
+            pageDiv.style.backgroundImage = `url(${page.backgroundImage})`;
+        } else if (!page.backgroundImage && currentBgImage) {
+            pageDiv.removeAttribute('data-bg-image');
+            pageDiv.classList.remove('has-bg-image');
+            pageDiv.style.backgroundImage = '';
+            
+            if (page.backgroundColor) {
+                pageDiv.style.backgroundColor = page.backgroundColor;
+            } else {
+                pageDiv.style.backgroundColor = bgColor;
+            }
+        }
+    } catch(e) {
+        console.error("Error updating background image for page", index, e);
+        pageDiv.style.backgroundImage = '';
         pageDiv.removeAttribute('data-bg-image');
         pageDiv.classList.remove('has-bg-image');
-        pageDiv.style.backgroundImage = '';
-        
-        if (page.backgroundColor) {
-            pageDiv.style.backgroundColor = page.backgroundColor;
-        } else {
-            pageDiv.style.backgroundColor = '#FFFFFF';
-        }
     }
 }
 
@@ -224,6 +239,19 @@ function setupPageIndexObserver() {
         
         if (oldIndex !== index) {
             animatePageTurn(oldIndex, index);
+            
+            const pageItems = document.querySelectorAll('.page-item');
+            pageItems.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected', 'active');
+                } else {
+                    item.classList.remove('selected', 'active');
+                }
+            });
+            
+            if (typeof updateNavigationButtonsState === 'function') {
+                updateNavigationButtonsState();
+            }
         }
     };
 }
@@ -553,4 +581,10 @@ document.addEventListener('DOMContentLoaded', function() {
             attributeFilter: ['class']
         });
     }
+    
+    document.addEventListener('pagetransitioned', function(e) {
+        if (typeof updateNavigationButtonsState === 'function') {
+            updateNavigationButtonsState();
+        }
+    });
 });

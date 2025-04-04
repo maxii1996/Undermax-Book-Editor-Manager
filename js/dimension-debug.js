@@ -3,6 +3,11 @@
  */
 
 function debugDimensions() {
+    if (!window.isDebugEnabled || !window.isDebugEnabled()) {
+        console.log("Debug mode is disabled. Enable with Ctrl+Shift+D.");
+        return;
+    }
+    
     console.group("Book Dimensions Debug");
     console.log("Current dimensions in bookData:", {
         width: bookData.bookWidth,
@@ -40,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.forceUpdateDimensions = function () {
+    if (!window.isDebugEnabled || !window.isDebugEnabled()) {
+        console.log("Debug mode is disabled. Enable with Ctrl+Shift+D.");
+        return;
+    }
+    
     updateAllPageDimensions();
     updateEditorSize();
     console.log("✅ Dimensiones actualizadas forzosamente");

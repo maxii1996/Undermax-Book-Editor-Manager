@@ -7,7 +7,8 @@ let bookData = {
     bookHeight: 400,
     coverColor: "#DC143C",
     backCoverColor: "#DC143C",
-    editorColor: "#FFFFFF"
+    editorColor: "#FFFFFF",
+    debug: false
 };
 
 function init() {
@@ -25,77 +26,7 @@ function init() {
         initEditor();
 
         if (newBook === 'true') {
-            let newBookData;
-            const useSessionStorage = urlParams.get('useSessionStorage') === 'true' || 
-                                    sessionStorage.getItem('useSessionStorageForBook') === 'true';
-            
-            if (useSessionStorage) {
-                newBookData = sessionStorage.getItem('newBookWizardData');
-                console.log("Loading book data from sessionStorage due to size constraints");
-            } else {
-                newBookData = localStorage.getItem('newBookWizardData');
-            }
-            
-            if (newBookData) {
-                try {
-                    const parsedData = JSON.parse(newBookData);
-
-                    bookData.bookName = parsedData.bookName || "";
-                    bookData.bookWidth = parsedData.bookWidth || 300;
-                    bookData.bookHeight = parsedData.bookHeight || 400;
-                    bookData.coverColor = parsedData.coverColor || "#DC143C";
-                    bookData.backCoverColor = parsedData.backCoverColor || "#DC143C";
-
-                    document.getElementById("bookName").value = bookData.bookName;
-                    document.getElementById("bookWidth").value = bookData.bookWidth;
-                    document.getElementById("bookHeight").value = bookData.bookHeight;
-                    document.getElementById("coverColorInput").value = bookData.coverColor;
-                    document.getElementById("backCoverColorInput").value = bookData.backCoverColor;
-
-                    if (Array.isArray(parsedData.pages)) {
-                        pages = parsedData.pages;
-                    } else {
-                        ensureBasicPages();
-                    }
-
-                    if (useSessionStorage) {
-                        sessionStorage.removeItem('newBookWizardData');
-                        sessionStorage.removeItem('useSessionStorageForBook');
-                    } else {
-                        localStorage.removeItem('newBookWizardData');
-                    }
-
-                    setupEditor();
-                    renderPageList();
-
-                    try {
-                        loadPageIntoEditor(0);
-                    } catch (error) {
-                        console.error("Error loading page into editor:", error);
-                        notifications.error("Error initializing the editor. Please refresh the page.");
-                    }
-
-                    updateFlipBook();
-
-                    BookEditorNotifications.bookLoaded(bookData.bookName || "Untitled Book");
-                } catch (error) {
-                    console.error("Error loading new book data:", error);
-                    setupEditor();
-                    ensureBasicPages();
-                    renderPageList();
-
-                    try {
-                        loadPageIntoEditor(0);
-                    } catch (error) {
-                        console.error("Error loading page into editor:", error);
-                        notifications.error("Error initializing the editor. Please refresh the page.");
-                    }
-
-                    setTimeout(() => {
-                        window.location.href = 'welcome.html';
-                    }, 500);
-                }
-            } else {
+            if (!loadWizardData()) {
                 setupEditor();
                 ensureBasicPages();
                 renderPageList();
@@ -209,6 +140,89 @@ function init() {
         }
     } catch (error) {
         console.error("Initialization error:", error);
+    }
+}
+
+function loadWizardData() {
+    try {
+        const wizardDataJson = localStorage.getItem('newBookWizardData');
+        
+        if (!wizardDataJson) {
+            console.log("No wizard data found");
+            return false;
+        }
+        
+        let parsedData;
+        try {
+            parsedData = JSON.parse(wizardDataJson);
+        } catch (error) {
+            console.error("Failed to parse wizard data:", error);
+            notifications.error("Failed to load book data. Please try again.");
+            return false;
+        }
+        
+        if (!parsedData || !parsedData.pages || !Array.isArray(parsedData.pages) || parsedData.pages.length === 0) {
+            console.error("No valid pages found in wizard data");
+            return false;
+        }
+        
+        try {
+            bookData.bookName = parsedData.bookName || "My Book";
+            bookData.bookWidth = parsedData.width || 300;
+            bookData.bookHeight = parsedData.height || 400;
+            bookData.coverColor = parsedData.coverColor || "#DC143C";
+            bookData.backCoverColor = parsedData.backCoverColor || "#DC143C";
+            bookData.editorColor = parsedData.editorColor || "#FFFFFF";
+            
+            const nameInput = document.getElementById("bookName");
+            const widthInput = document.getElementById("bookWidth");
+            const heightInput = document.getElementById("bookHeight");
+            const coverColorInput = document.getElementById("coverColorInput");
+            const backCoverColorInput = document.getElementById("backCoverColorInput");
+            
+            if (nameInput) nameInput.value = bookData.bookName;
+            if (widthInput) widthInput.value = bookData.bookWidth;
+            if (heightInput) heightInput.value = bookData.bookHeight;
+            if (coverColorInput) coverColorInput.value = bookData.coverColor;
+            if (backCoverColorInput) backCoverColorInput.value = bookData.backCoverColor;
+
+            pages = parsedData.pages.map(page => {
+                if (page.backgroundImage && typeof page.backgroundImage !== 'string') {
+                    console.warn("Invalid background image format detected, resetting");
+                    page.backgroundImage = "";
+                }
+                return page;
+            });
+            
+            if (pages.length === 0) {
+                throw new Error("No valid pages found after processing");
+            }
+            
+            setupEditor();
+            renderPageList();
+            
+            try {
+                loadPageIntoEditor(0);
+            } catch (error) {
+                console.error("Error loading page into editor:", error);
+                notifications.error("Error initializing the editor. Please refresh the page.");
+                return false;
+            }
+
+            updateFlipBook();
+            localStorage.removeItem('newBookWizardData');
+            
+            notifications.success("Book created successfully!");
+            return true;
+        } catch (error) {
+            console.error("Error processing wizard data:", error);
+            notifications.error("Failed to create book. Please try again.");
+            return false;
+        }
+    } catch (error) {
+        console.error("Unexpected error loading wizard data:", error);
+        notifications.error("An unexpected error occurred. Please try again.");
+        return false;
     }
 }
 
@@ -663,14 +677,37 @@ function updateUIAfterPageLoad() {
         const pageItems = document.querySelectorAll('.page-item');
         pageItems.forEach((item, index) => {
             if (index === currentPageIndex) {
-                item.classList.add("selected");
+                item.classList.add("selected", "active");
             } else {
-                item.classList.remove("selected");
+                item.classList.remove("selected", "active");
             }
         });
         
+        updateNavigationButtonsState();
+        
     } catch (error) {
         console.error("Error updating UI after page load:", error);
+    }
+}
+
+function updateNavigationButtonsState() {
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    
+    if (prevBtn) {
+        if (currentPageIndex <= 0) {
+            prevBtn.style.display = "none";
+        } else {
+            prevBtn.style.display = "flex";
+        }
+    }
+    
+    if (nextBtn) {
+        if (currentPageIndex >= pages.length - 1) {
+            nextBtn.style.display = "none";
+        } else {
+            nextBtn.style.display = "flex";
+        }
     }
 }
 
@@ -720,6 +757,30 @@ function showDeletePageDialog(index) {
         console.error('showDeleteConfirmation function not found');
     }
 }
+
+function toggleDebugMode() {
+    bookData.debug = !bookData.debug;
+    const debugBtn = document.querySelector('button[innerText="Debug"]');
+    
+    if (debugBtn) {
+        if (bookData.debug) {
+            debugBtn.style.display = 'block';
+            notifications.info("Debug mode enabled");
+        } else {
+            debugBtn.style.display = 'none';
+            notifications.info("Debug mode disabled");
+        }
+    }
+    
+    saveEditorChanges();
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        toggleDebugMode();
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     setupDimensionInputs();

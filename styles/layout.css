@@ -443,7 +443,8 @@ body.right-panel-collapsed #middle-panel {
 }
 
 .page-item:hover {
-    background: #3E3E40;
+    background: #ffffffe7;
+    transition: ease-in-out 0.2s;
 }
 
 .page-item.active {

@@ -36,6 +36,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: var(--bg-image-placeholder, none);
+    transform: none !important;
 }
 
 .image-loading {
@@ -208,7 +209,7 @@
     border-radius: 6px;
     width: 95%;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     border-left: 2px solid transparent;
     display: flex;
     justify-content: space-between;
@@ -218,9 +219,12 @@
 
 #page-list div.page-item:hover {
     background: #333333;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
 
-#page-list div.page-item.selected {
+#page-list div.page-item.selected,
+#page-list div.page-item.active {
     background: #363636;
     border-left: 2px solid #0078D7;
 }

@@ -16,6 +16,7 @@ function updatePagesVisual() {
     
     const totalPages = pagesCount + 2;
     
+    // Create front cover with proper style
     const coverIcon = document.createElement('div');
     coverIcon.className = 'page-item cover';
     coverIcon.textContent = 'FRONT';
@@ -23,8 +24,11 @@ function updatePagesVisual() {
     if (window.bookData && window.bookData.coverType === 'image' && window.bookData.coverImage) {
         coverIcon.style.backgroundImage = `url(${window.bookData.coverImage})`;
         coverIcon.style.backgroundColor = 'transparent';
+        // Ensure no transform is initially applied
+        coverIcon.style.transform = 'none';
     } else if (window.bookData) {
         coverIcon.style.backgroundColor = window.bookData.coverColor || '#DC143C';
+        coverIcon.style.backgroundImage = '';
     }
     
     pagesContainer.appendChild(coverIcon);
@@ -57,6 +61,7 @@ function updatePagesVisual() {
         }
     }
     
+    // Create back cover with proper style
     const backIcon = document.createElement('div');
     backIcon.className = 'page-item back';
     backIcon.textContent = 'BACK';
@@ -64,8 +69,11 @@ function updatePagesVisual() {
     if (window.bookData && window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) {
         backIcon.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
         backIcon.style.backgroundColor = 'transparent';
+        // Ensure no transform is initially applied
+        backIcon.style.transform = 'none';
     } else if (window.bookData) {
         backIcon.style.backgroundColor = window.bookData.backCoverColor || '#DC143C';
+        backIcon.style.backgroundImage = '';
     }
     
     pagesContainer.appendChild(backIcon);

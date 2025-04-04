@@ -79,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     debugBtn.style.borderRadius = '4px';
     debugBtn.style.padding = '5px 10px';
     debugBtn.style.fontSize = '12px';
+    
+    debugBtn.style.display = (window.bookData && window.bookData.debug) ? 'block' : 'none';
 
     debugBtn.addEventListener('click', () => {
         debugBookState();
@@ -86,3 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.body.appendChild(debugBtn);
 });
+
+window.isDebugEnabled = function() {
+    return window.bookData && window.bookData.debug === true;
+};

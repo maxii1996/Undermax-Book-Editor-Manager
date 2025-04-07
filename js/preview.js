@@ -123,19 +123,22 @@ function updatePageElement(pageDiv, index) {
     
     try {
         const currentBgImage = pageDiv.getAttribute('data-bg-image') || '';
-        if (page.backgroundImage && typeof page.backgroundImage === 'string' && currentBgImage !== page.backgroundImage) {
+        if (page.backgroundImage && typeof page.backgroundImage === 'string' && page.backgroundImage.trim() !== '') {
             pageDiv.setAttribute('data-bg-image', page.backgroundImage);
             pageDiv.classList.add('has-bg-image');
             pageDiv.style.backgroundImage = `url(${page.backgroundImage})`;
-        } else if (!page.backgroundImage && currentBgImage) {
+            
+            // When page has a background image, ensure background color is transparent or as specified
+            if (page.backgroundColor === 'transparent') {
+                pageDiv.style.backgroundColor = 'transparent';
+            }
+        } else if (!page.backgroundImage || page.backgroundImage.trim() === '') {
             pageDiv.removeAttribute('data-bg-image');
             pageDiv.classList.remove('has-bg-image');
             pageDiv.style.backgroundImage = '';
             
             if (page.backgroundColor) {
                 pageDiv.style.backgroundColor = page.backgroundColor;
-            } else {
-                pageDiv.style.backgroundColor = bgColor;
             }
         }
     } catch(e) {

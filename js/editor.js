@@ -206,6 +206,43 @@ function insertImage() {
     input.onchange = () => {
         const file = input.files[0];
         if (file) {
+            const MAX_IMAGE_SIZE_KB = 500;
+            
+            if (window.BookImageUtils && typeof window.BookImageUtils.isFileTooLarge === 'function') {
+                if (BookImageUtils.isFileTooLarge(file, MAX_IMAGE_SIZE_KB)) {
+                    input.value = '';
+                    
+                    let sizeStr = '';
+                    try {
+                        sizeStr = BookImageUtils.formatFileSize(file.size);
+                    } catch (e) {
+                        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        sizeStr = sizeMB + 'MB';
+                    }
+                    
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeStr}). Please use an image smaller than ${MAX_IMAGE_SIZE_KB}KB.`);
+                    } else {
+                        alert(`Image too large (${sizeStr}). Please use an image smaller than ${MAX_IMAGE_SIZE_KB}KB.`);
+                    }
+                    
+                    return;
+                }
+            } else {
+                if (file.size > (MAX_IMAGE_SIZE_KB * 1024)) {
+                    input.value = '';
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeMB}MB). Please use an image smaller than ${MAX_IMAGE_SIZE_KB}KB.`);
+                    } else {
+                        alert(`Image too large (${sizeMB}MB). Please use an image smaller than ${MAX_IMAGE_SIZE_KB}KB.`);
+                    }
+                    
+                    return;
+                }
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = document.createElement('img');
@@ -216,19 +253,53 @@ function insertImage() {
                 img.style.resize = 'both';
                 img.style.overflow = 'hidden';
                 
+                editor.focus();
+                
                 const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    range.deleteContents();
-                    range.insertNode(img);
-                    
-                    range.setStartAfter(img);
-                    range.setEndAfter(img);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                let range;
+                
+                range = document.createRange();
+                
+                if (editor.childNodes.length === 0) {
+                    editor.appendChild(document.createTextNode(''));
+                    range.setStart(editor.firstChild, 0);
+                    range.setEnd(editor.firstChild, 0);
                 } else {
-                    editor.appendChild(img);
+                    if (selection.rangeCount > 0) {
+                        const currentRange = selection.getRangeAt(0);
+                        let isInsideEditor = false;
+                        
+                        let node = currentRange.commonAncestorContainer;
+                        while (node != null) {
+                            if (node === editor) {
+                                isInsideEditor = true;
+                                break;
+                            }
+                            node = node.parentNode;
+                        }
+                        
+                        if (isInsideEditor) {
+                            range = currentRange;
+                        } else {
+                            range.selectNodeContents(editor);
+                            range.collapse(false);
+                        }
+                    } else {
+                        range.selectNodeContents(editor);
+                        range.collapse(false);
+                    }
                 }
+                
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                range.deleteContents();
+                range.insertNode(img);
+                
+                range.setStartAfter(img);
+                range.setEndAfter(img);
+                selection.removeAllRanges();
+                selection.addRange(range);
                 
                 editor.dispatchEvent(new Event('input'));
             };
@@ -317,6 +388,12 @@ function initToolbar() {
             
             <div class="toolbar-group media-controls">
                 <button title="Insert Image" onclick="insertImage()" class="toolbar-btn" data-tooltip="Insert Image"><i class="ri-image-add-line"></i></button>
+                <button title="Align Image Left" onclick="alignImage('left')" class="toolbar-btn" data-tooltip="Align Image Left"><i class="ri-align-left"></i></button>
+                <button title="Align Image Center" onclick="alignImage('center')" class="toolbar-btn" data-tooltip="Align Image Center"><i class="ri-align-center"></i></button>
+                <button title="Align Image Right" onclick="alignImage('right')" class="toolbar-btn" data-tooltip="Align Image Right"><i class="ri-align-right"></i></button>
+                <button title="Increase Image Size" onclick="resizeImage(1.1)" class="toolbar-btn" data-tooltip="Increase Image Size"><i class="ri-zoom-in-line"></i></button>
+                <button title="Decrease Image Size" onclick="resizeImage(0.9)" class="toolbar-btn" data-tooltip="Decrease Image Size"><i class="ri-zoom-out-line"></i></button>
+                <button title="Reset Image Size" onclick="resetImageSize()" class="toolbar-btn" data-tooltip="Reset Image Size"><i class="ri-restart-line"></i></button>
             </div>
         </div>
     `;
@@ -326,74 +403,26 @@ function initToolbar() {
 }
 
 function setupFormatPersistence() {
-    if (!editor) return;
-    
-    const formatState = {
-        bold: false,
-        italic: false,
-        underline: false,
-        strikethrough: false
-    };
-    
-    updateFormatState();
-    
-    const buttons = {
-        bold: document.querySelector('[title="Bold"]'),
-        italic: document.querySelector('[title="Italic"]'),
-        underline: document.querySelector('[title="Underline"]'),
-        strikethrough: document.querySelector('[title="Strikethrough"]')
-    };
-    
-    Object.keys(buttons).forEach(format => {
-        if (buttons[format]) {
-            buttons[format].addEventListener('click', function() {
-                formatState[format] = !formatState[format];
-                updateFormatState();
-            });
-        }
-    });
-    
-    editor.addEventListener('focus', function() {
-        applyStoredFormatState();
-    });
-    
-    editor.addEventListener('blur', function() {
-        updateFormatState();
-    });
-    
-    function updateFormatState() {
-        formatState.bold = document.queryCommandState('bold');
-        formatState.italic = document.queryCommandState('italic');
-        formatState.underline = document.queryCommandState('underline');
-        formatState.strikethrough = document.queryCommandState('strikethrough');
-    }
-    
-    function applyStoredFormatState() {
-        if (formatState.bold) execCommand('bold', false, null);
-        if (formatState.italic) execCommand('italic', false, null);
-        if (formatState.underline) execCommand('underline', false, null);
-        if (formatState.strikethrough) execCommand('strikethrough', false, null);
-        updateToolbarState();
-    }
+    return;
 }
 
 function updateToolbarState() {
     if (!editor) return;
     
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) return;
+    if (!selection.rangeCount) return;
     
     const parentElement = selection.getRangeAt(0).commonAncestorContainer.parentElement || editor;
     
     const boldBtn = document.querySelector('[title="Bold"]');
     const italicBtn = document.querySelector('[title="Italic"]');
     const underlineBtn = document.querySelector('[title="Underline"]');
-    const strikeBtn = document.querySelector('[title="Strikethrough"]');
+    const strikethroughBtn = document.querySelector('[title="Strikethrough"]');
     
     if (boldBtn) boldBtn.classList.toggle('active', document.queryCommandState('bold'));
     if (italicBtn) italicBtn.classList.toggle('active', document.queryCommandState('italic'));
     if (underlineBtn) underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
-    if (strikeBtn) strikeBtn.classList.toggle('active', document.queryCommandState('strikethrough'));
+    if (strikethroughBtn) strikethroughBtn.classList.toggle('active', document.queryCommandState('strikeThrough'));
     
     const alignLeftBtn = document.querySelector('[title="Align Left"]');
     const alignCenterBtn = document.querySelector('[title="Align Center"]');
@@ -407,13 +436,233 @@ function updateToolbarState() {
     if (alignCenterBtn) alignCenterBtn.classList.toggle('active', textAlign === 'center');
     if (alignRightBtn) alignRightBtn.classList.toggle('active', textAlign === 'right');
     if (alignJustifyBtn) alignJustifyBtn.classList.toggle('active', textAlign === 'justify');
+    
+    const selectedImage = getSelectedImage();
+    
+    const imgAlignLeftBtn = document.querySelector('[title="Align Image Left"]');
+    const imgAlignCenterBtn = document.querySelector('[title="Align Image Center"]');
+    const imgAlignRightBtn = document.querySelector('[title="Align Image Right"]');
+    
+    if (imgAlignLeftBtn) imgAlignLeftBtn.classList.toggle('active', selectedImage && selectedImage.classList.contains('img-left'));
+    if (imgAlignCenterBtn) imgAlignCenterBtn.classList.toggle('active', selectedImage && selectedImage.classList.contains('img-center'));
+    if (imgAlignRightBtn) imgAlignRightBtn.classList.toggle('active', selectedImage && selectedImage.classList.contains('img-right'));
 }
 
 function setupEditor() {
-    editor.addEventListener('keyup', updateToolbarState);
-    editor.addEventListener('mouseup', updateToolbarState);
-    editor.addEventListener('input', updateToolbarState);
+    if (!editor) return;
+    
+    document.addEventListener('selectionchange', updateToolbarState);
+    
+    editor.addEventListener('click', updateToolbarState);
+    
+    updateToolbarState();
 }
+
+function alignImage(alignment) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    let selectedImage = getSelectedImage();
+    
+    if (!selectedImage) {
+        const parentNode = range.commonAncestorContainer;
+        if (parentNode.nodeType === 3) {
+            selectedImage = findClosestImage(parentNode.parentNode);
+        } else {
+            selectedImage = findClosestImage(parentNode);
+        }
+        
+        if (!selectedImage) {
+            if (window.notifications) {
+                notifications.info("Please select an image first.");
+            } else {
+                alert("Please select an image first.");
+            }
+            return;
+        }
+    }
+    
+    selectedImage.classList.remove('img-left', 'img-center', 'img-right');
+    
+    selectedImage.style.float = '';
+    selectedImage.style.display = '';
+    selectedImage.style.marginLeft = '';
+    selectedImage.style.marginRight = '';
+    
+    switch(alignment) {
+        case 'left':
+            selectedImage.classList.add('img-left');
+            selectedImage.style.float = 'left';
+            selectedImage.style.marginRight = '1em';
+            selectedImage.style.marginLeft = '0';
+            break;
+        case 'center':
+            selectedImage.classList.add('img-center');
+            selectedImage.style.display = 'block';
+            selectedImage.style.marginLeft = 'auto';
+            selectedImage.style.marginRight = 'auto';
+            selectedImage.style.float = 'none';
+            break;
+        case 'right':
+            selectedImage.classList.add('img-right');
+            selectedImage.style.float = 'right';
+            selectedImage.style.marginLeft = '1em';
+            selectedImage.style.marginRight = '0';
+            break;
+    }
+    
+    selectedImage.style.outline = '2px solid #0078D7';
+    setTimeout(() => {
+        selectedImage.style.outline = '';
+    }, 500);
+    
+    console.log(`Image alignment applied: ${alignment}`);
+    
+    if (typeof updateSaveButtonState === 'function') {
+        updateSaveButtonState();
+    }
+    
+    saveEditorChanges();
+    updateFlipBook();
+}
+
+function getSelectedImage() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return null;
+    
+    const range = selection.getRangeAt(0);
+    
+    if (range.startContainer.nodeType === 1) {
+        if (range.startContainer.tagName === 'IMG') {
+            return range.startContainer;
+        } 
+        
+        if (range.startOffset < range.startContainer.childNodes.length) {
+            const node = range.startContainer.childNodes[range.startOffset];
+            if (node && node.tagName === 'IMG') {
+                return node;
+            }
+        }
+    }
+    
+    let current = range.commonAncestorContainer;
+    
+    if (current.nodeType === 3 && current.parentNode) {
+        const prevSibling = current.previousSibling;
+        const nextSibling = current.nextSibling;
+        
+        if (prevSibling && prevSibling.tagName === 'IMG') {
+            return prevSibling;
+        }
+        
+        if (nextSibling && nextSibling.tagName === 'IMG') {
+            return nextSibling;
+        }
+    }
+    
+    while (current && current !== editor) {
+        if (current.tagName === 'IMG') {
+            return current;
+        }
+        current = current.parentNode;
+    }
+    
+    const editorImages = editor.querySelectorAll('img');
+    if (editorImages.length === 1) {
+        return editorImages[0];
+    }
+    
+    return null;
+}
+
+function resizeImage(factor) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    let selectedImage = getSelectedImage();
+    
+    if (!selectedImage) {
+        const parentNode = range.commonAncestorContainer;
+        if (parentNode.nodeType === 3) {
+            selectedImage = findClosestImage(parentNode.parentNode);
+        } else {
+            selectedImage = findClosestImage(parentNode);
+        }
+        
+        if (!selectedImage) {
+            notifications.info("Please select an image first.");
+            return;
+        }
+    }
+    
+    let currentWidth = selectedImage.style.width ? 
+        parseInt(selectedImage.style.width) : 
+        selectedImage.naturalWidth;
+    
+    if (selectedImage.style.width && selectedImage.style.width.includes('%')) {
+        currentWidth = (parseInt(selectedImage.style.width) / 100) * selectedImage.parentElement.offsetWidth;
+    }
+    
+    const newWidth = Math.max(50, Math.min(currentWidth * factor, editor.offsetWidth * 0.95));
+    selectedImage.style.width = `${Math.round(newWidth)}px`;
+    selectedImage.style.height = 'auto';
+    
+    selectedImage.classList.add('resizable');
+    
+    if (typeof updateSaveButtonState === 'function') {
+        updateSaveButtonState();
+    }
+    
+    saveEditorChanges();
+    updateFlipBook();
+}
+
+function resetImageSize() {
+    const selectedImage = getSelectedImage();
+    if (!selectedImage) {
+        notifications.info("Please select an image first.");
+        return;
+    }
+    
+    selectedImage.style.width = '';
+    selectedImage.style.height = '';
+    selectedImage.classList.remove('resizable');
+    
+    if (typeof updateSaveButtonState === 'function') {
+        updateSaveButtonState();
+    }
+    
+    saveEditorChanges();
+    updateFlipBook();
+}
+
+function findClosestImage(element) {
+    if (element.tagName === 'IMG') {
+        return element;
+    }
+    
+    const directImg = element.querySelector('img');
+    if (directImg) {
+        return directImg;
+    }
+    
+    let current = element;
+    while (current && current !== editor) {
+        const img = current.querySelector('img');
+        if (img) {
+            return img;
+        }
+        current = current.parentNode;
+    }
+    
+    return null;
+}
+
+window.alignImage = alignImage;
+window.resizeImage = resizeImage;
+window.resetImageSize = resetImageSize;
 
 const style = document.createElement('style');
 style.textContent = `

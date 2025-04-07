@@ -91,6 +91,7 @@ function enhanceUIComponents() {
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
+                    imagePreview.innerHTML = '';
                     imagePreview.style.backgroundImage = `url(${e.target.result})`;
                     updateImagePreviewVisibility();
                     

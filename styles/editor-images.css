@@ -1,0 +1,42 @@
+
+.custom-editor img {
+    max-width: 100%;
+    height: auto;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.custom-editor img.img-left {
+    float: left;
+    margin: 0.5em 1em 0.5em 0;
+    clear: left;
+}
+
+.custom-editor img.img-center {
+    display: block;
+    margin: 0.8em auto;
+    float: none;
+    clear: both;
+}
+
+.custom-editor img.img-right {
+    float: right;
+    margin: 0.5em 0 0.5em 1em;
+    clear: right;
+}
+
+.custom-editor img.resizable {
+    border: 1px dashed #555555;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.custom-editor img.resizable:hover {
+    border: 1px dashed #0078D7;
+    box-shadow: 0 0 15px rgba(0, 120, 215, 0.3);
+}
+
+.custom-editor img:focus,
+.custom-editor img.selected {
+    outline: 2px solid #0078D7;
+}

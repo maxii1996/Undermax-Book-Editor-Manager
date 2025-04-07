@@ -93,7 +93,48 @@ function getStringSizeInBytes(str) {
     return new Blob([str]).size;
 }
 
+/**
+ * Check if a file exceeds the maximum size
+ * @param {File} file - The file to check
+ * @param {number} maxSizeKB - Maximum size in KB
+ * @returns {boolean} True if the file is too large
+ */
+function isFileTooLarge(file, maxSizeKB) {
+    if (!file) return false;
+    const maxBytes = maxSizeKB * 1024;
+    return file.size > maxBytes;
+}
+
+/**
+ * Formats file size in a human-readable format
+ * @param {number} bytes - The size in bytes
+ * @returns {string} - Formatted string (e.g. "5.2MB" or "423KB")
+ */
+function formatFileSize(bytes) {
+    if (!bytes || isNaN(bytes)) return '0 Bytes';
+    
+    const units = ['Bytes', 'KB', 'MB', 'GB'];
+    let unitIndex = 0;
+    
+    while (bytes >= 1024 && unitIndex < units.length - 1) {
+        bytes /= 1024;
+        unitIndex++;
+    }
+    
+    return `${bytes.toFixed(unitIndex === 0 ? 0 : 1)}${units[unitIndex]}`;
+}
+
+if (!window.BookImageUtils) {
+    window.BookImageUtils = {};
+}
+
+if (!window.BookImageUtils.formatFileSize) {
+    window.BookImageUtils.formatFileSize = formatFileSize;
+}
+
 window.BookImageUtils = {
+    isFileTooLarge,
+    formatFileSize,
     compressImage,
     safelyStoreData,
     getStringSizeInBytes,

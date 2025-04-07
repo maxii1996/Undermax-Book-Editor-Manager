@@ -278,6 +278,7 @@
     z-index: 2;
 }
 
+
 .color-picker-display {
     width: 40px;
     height: 40px;
@@ -293,8 +294,8 @@
 
 .color-picker-icon {
     position: absolute;
-    bottom: -5px;
-    right: -5px;
+    bottom: 0px;
+    right: 0px;
     width: 20px;
     height: 20px;
     background: white;

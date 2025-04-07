@@ -43,56 +43,60 @@ function init() {
             if (loadedBookData) {
                 try {
                     const data = JSON.parse(loadedBookData);
-
-                    bookData.bookName = data.bookName || "";
-                    bookData.bookWidth = data.bookWidth || 300;
+                    
+                    bookData.bookName = data.bookName || "Untitled Book";
+                    bookData.bookWidth = data.bookWidth || 350;
                     bookData.bookHeight = data.bookHeight || 400;
                     bookData.coverColor = data.coverColor || "#DC143C";
                     bookData.backCoverColor = data.backCoverColor || "#DC143C";
-
-                    document.getElementById("bookName").value = bookData.bookName;
-                    document.getElementById("bookWidth").value = bookData.bookWidth;
-                    document.getElementById("bookHeight").value = bookData.bookHeight;
-                    document.getElementById("coverColorInput").value = bookData.coverColor;
-                    document.getElementById("backCoverColorInput").value = bookData.backCoverColor;
-
+                    bookData.editorColor = data.editorColor || "#FFFFFF";
+                    
+                    const nameInput = document.getElementById("bookName");
+                    const widthInput = document.getElementById("bookWidth");
+                    const heightInput = document.getElementById("bookHeight");
+                    const coverColorInput = document.getElementById("coverColorInput");
+                    const backCoverColorInput = document.getElementById("backCoverColorInput");
+                    
+                    if (nameInput) nameInput.value = bookData.bookName;
+                    if (widthInput) widthInput.value = bookData.bookWidth;
+                    if (heightInput) heightInput.value = bookData.bookHeight;
+                    if (coverColorInput) coverColorInput.value = bookData.coverColor;
+                    if (backCoverColorInput) backCoverColorInput.value = bookData.backCoverColor;
+                    
                     pages = data.pages || [];
-
-                    sessionStorage.removeItem('loadedBookData');
-
+                    
                     setupEditor();
                     renderPageList();
-
-                    try {
-                        loadPageIntoEditor(0);
-                    } catch (error) {
-                        console.error("Error loading page into editor:", error);
-                        notifications.error("Error initializing the editor. Please refresh the page.");
-                    }
-
+                    loadPageIntoEditor(0);
                     updateFlipBook();
-
-                    BookEditorNotifications.bookLoaded(bookData.bookName || "Untitled Book");
+                    
+                    sessionStorage.removeItem('loadedBookData');
+                    
+                    if (typeof BookEditorNotifications !== 'undefined') {
+                        BookEditorNotifications.bookLoaded(bookData.bookName);
+                    } else {
+                        notifications.success("Book loaded successfully!");
+                    }
                 } catch (error) {
                     console.error("Error loading book:", error);
+                    notifications.error("Error loading book: " + error.message);
+                    
+                    loadSettings();
+                    initEditor();
                     setupEditor();
                     ensureBasicPages();
                     renderPageList();
-
-                    try {
-                        loadPageIntoEditor(0);
-                    } catch (error) {
-                        console.error("Error loading page into editor:", error);
-                        notifications.error("Error initializing the editor. Please refresh the page.");
-                    }
-
-                    setTimeout(() => {
-                        window.location.href = 'welcome.html';
-                    }, 500);
+                    loadPageIntoEditor(0);
+                    updateFlipBook();
                 }
             } else {
-                window.location.href = 'welcome.html';
-                return;
+                loadSettings();
+                initEditor();
+                setupEditor();
+                ensureBasicPages();
+                renderPageList();
+                loadPageIntoEditor(0);
+                updateFlipBook();
             }
         } else {
             setupEditor();
@@ -135,6 +139,30 @@ function init() {
                             updateToolbarState();
                         }
                     });
+                    
+                    editor.addEventListener('click', function(e) {
+                        if (e.target.tagName === 'IMG') {
+                            const range = document.createRange();
+                            range.selectNode(e.target);
+                            
+                            const selection = window.getSelection();
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            
+                            if (typeof updateToolbarState === 'function') {
+                                updateToolbarState();
+                            }
+                        }
+                    });
+                    
+                    editor.addEventListener('dblclick', function(e) {
+                        if (e.target.tagName === 'IMG') {
+                            const img = e.target;
+                            img.classList.toggle('resizable');
+                            
+                            e.preventDefault();
+                        }
+                    });
                 }
             }, 100);
         }
@@ -161,8 +189,56 @@ function loadWizardData() {
             return false;
         }
         
-        if (!parsedData || !parsedData.pages || !Array.isArray(parsedData.pages) || parsedData.pages.length === 0) {
-            console.error("No valid pages found in wizard data");
+        console.log("Wizard data loaded:", parsedData);
+        console.log("Pages count in wizard data:", parsedData.pages ? parsedData.pages.length : 0);
+        
+        if (!parsedData.pages || !Array.isArray(parsedData.pages) || parsedData.pages.length === 0) {
+            console.warn("No pages found in wizard data, initializing default pages");
+            
+            const width = parsedData.width || 350;
+            const height = parsedData.height || 400;
+            const pagesCount = parsedData.pageCount || 1;
+            
+            parsedData.pages = [];
+            
+            parsedData.pages.push({
+                name: "Cover",
+                width: width,
+                height: height,
+                backgroundColor: parsedData.coverType === 'image' ? 'transparent' : (parsedData.coverColor || "#DC143C"),
+                backgroundImage: parsedData.coverType === 'image' ? parsedData.coverImage || "" : "",
+                alignment: "center",
+                contentHtml: "<p>Your Book Title</p>"
+            });
+            
+            for (let i = 0; i < pagesCount; i++) {
+                parsedData.pages.push({
+                    name: `Page ${i + 1}`,
+                    width: width,
+                    height: height,
+                    backgroundColor: "#FFFFFF",
+                    backgroundImage: "",
+                    alignment: "left",
+                    contentHtml: ""
+                });
+            }
+            
+            parsedData.pages.push({
+                name: "Back Cover",
+                width: width,
+                height: height,
+                backgroundColor: parsedData.backCoverType === 'image' ? 'transparent' : (parsedData.backCoverColor || "#DC143C"),
+                backgroundImage: parsedData.backCoverType === 'image' ? parsedData.backCoverImage || "" : "",
+                alignment: "center",
+                contentHtml: ""
+            });
+            
+            console.log(`Created default pages array with ${parsedData.pages.length} pages`);
+        }
+        
+        if (!parsedData.pages || !Array.isArray(parsedData.pages) || parsedData.pages.length === 0) {
+            console.error("Failed to initialize pages array");
+            notifications.error("Could not create book pages. Please try again.");
             return false;
         }
         
@@ -198,6 +274,8 @@ function loadWizardData() {
                 throw new Error("No valid pages found after processing");
             }
             
+            console.log(`Successfully processed ${pages.length} pages`);
+            
             setupEditor();
             renderPageList();
             
@@ -222,6 +300,82 @@ function loadWizardData() {
     } catch (error) {
         console.error("Unexpected error loading wizard data:", error);
         notifications.error("An unexpected error occurred. Please try again.");
+        return false;
+    }
+}
+
+function loadBookFromStorage() {
+    try {
+        const storedData = localStorage.getItem('newBookWizardData');
+        if (!storedData) return false;
+        
+        const parsedData = JSON.parse(storedData);
+        if (!parsedData) return false;
+        
+        console.log("Loading book data from storage:", {
+            name: parsedData.bookName,
+            dimensions: `${parsedData.bookWidth}x${parsedData.bookHeight}`,
+            pageCount: parsedData.pageCount,
+            hasPages: Boolean(parsedData.pages && parsedData.pages.length),
+            pageLength: parsedData.pages ? parsedData.pages.length : 0,
+            coverType: parsedData.coverType,
+            backCoverType: parsedData.backCoverType,
+            hasImages: {
+                cover: Boolean(parsedData.coverImage),
+                backCover: Boolean(parsedData.backCoverImage)
+            }
+        });
+        
+        if (parsedData.pages && Array.isArray(parsedData.pages)) {
+            const expectedLength = parsedData.pageCount + 2;
+            
+            if (parsedData.pages.length !== expectedLength) {
+                console.warn(`Page count mismatch: expected ${expectedLength}, got ${parsedData.pages.length}. Fixing...`);
+                
+                const frontCover = parsedData.pages[0] || {
+                    name: "Cover",
+                    width: parsedData.bookWidth,
+                    height: parsedData.bookHeight,
+                    backgroundColor: parsedData.coverType === 'color' ? parsedData.coverColor : 'transparent',
+                    backgroundImage: parsedData.coverType === 'image' ? parsedData.coverImage : '',
+                    alignment: "center",
+                    contentHtml: "<p>Your Book Title</p>"
+                };
+                
+                const backCover = parsedData.pages[parsedData.pages.length - 1] || {
+                    name: "Back Cover",
+                    width: parsedData.bookWidth,
+                    height: parsedData.bookHeight,
+                    backgroundColor: parsedData.backCoverType === 'color' ? parsedData.backCoverColor : 'transparent',
+                    backgroundImage: parsedData.backCoverType === 'image' ? parsedData.backCoverImage : '',
+                    alignment: "center",
+                    contentHtml: ""
+                };
+                
+                parsedData.pages = [frontCover];
+                
+                for (let i = 0; i < parsedData.pageCount; i++) {
+                    parsedData.pages.push({
+                        name: `Page ${i + 1}`,
+                        width: parsedData.bookWidth,
+                        height: parsedData.bookHeight,
+                        backgroundColor: "#FFFFFF",
+                        backgroundImage: "",
+                        alignment: "left",
+                        contentHtml: ""
+                    });
+                }
+                
+                parsedData.pages.push(backCover);
+            }
+        }
+        
+        bookData = parsedData;
+        pages = parsedData.pages || [];
+        
+        return true;
+    } catch (error) {
+        console.error("Error loading book from storage:", error);
         return false;
     }
 }
@@ -274,32 +428,57 @@ function attachEventListeners() {
                     const file = e.target.files[0];
                     if (!file) return;
                     
+                    if (BookImageUtils.isFileTooLarge(file, 500)) {
+                        const sizeStr = BookImageUtils.formatFileSize(file.size);
+                        notifications.error(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+                        
+                        const imagePreview = document.getElementById("image-preview");
+                        if (imagePreview) {
+                            imagePreview.innerHTML = `<div class="image-error">File too large: ${sizeStr}.<br>Maximum allowed: 500KB</div>`;
+                            imagePreview.style.display = "flex";
+                            
+                            setTimeout(() => {
+                                imagePreview.style.display = "none";
+                            }, 5000);
+                        }
+                        return;
+                    }
+                    
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        if (currentPageIndex >= 0 && currentPageIndex < pages.length) {
-                            pages[currentPageIndex].backgroundImage = event.target.result;
-                            
-                            const imagePreview = document.getElementById('image-preview');
-                            if (imagePreview) {
-                                imagePreview.style.backgroundImage = `url(${event.target.result})`;
-                                imagePreview.style.display = 'block';
+                        const imageDataUrl = event.target.result;
+                        
+                        BookImageUtils.autoOptimizeImage(imageDataUrl, 500).then(result => {
+                            if (result.optimized) {
+                                notifications.info(`Image optimized: ${result.original.formatted} → ${result.formatted}`);
                             }
                             
-                            const pageBgImage = document.getElementById('pageBgImage');
-                            if (pageBgImage) {
-                                pageBgImage.textContent = file.name;
+                            if (currentPageIndex >= 0 && currentPageIndex < pages.length) {
+                                pages[currentPageIndex].backgroundImage = result.dataUrl;
+                                
+                                const imagePreview = document.getElementById('image-preview');
+                                if (imagePreview) {
+                                    imagePreview.innerHTML = '';
+                                    imagePreview.style.backgroundImage = `url(${result.dataUrl})`;
+                                    imagePreview.style.display = 'block';
+                                }
+                                
+                                const pageBgImage = document.getElementById('pageBgImage');
+                                if (pageBgImage) {
+                                    pageBgImage.textContent = file.name;
+                                }
+                                
+                                const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
+                                if (backgroundColorGroup) {
+                                    backgroundColorGroup.style.display = "none";
+                                }
+                                
+                                updateFlipBook();
+                                updateRemoveImageButtonState();
+                                updateSaveButtonState();
+                                saveEditorChanges();
                             }
-                            
-                            const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-                            if (backgroundColorGroup) {
-                                backgroundColorGroup.style.display = "none";
-                            }
-                            
-                            updateFlipBook();
-                            updateRemoveImageButtonState();
-                            updateSaveButtonState();
-                            saveEditorChanges();
-                        }
+                        });
                     };
                     reader.readAsDataURL(file);
                 };
@@ -444,6 +623,69 @@ function attachEventListeners() {
             window.notifications.error("Error setting up UI: " + error.message);
         }
     }
+}
+
+function validateAllBookImages() {
+    const issues = [];
+    const MAX_SIZE_KB = 500;
+    
+    pages.forEach((page, index) => {
+        if (!page.backgroundImage) return;
+        
+        const validation = BookImageUtils.validateImageSize(page.backgroundImage, MAX_SIZE_KB);
+        if (!validation.valid) {
+            const pageType = index === 0 ? "Front Cover" : 
+                            (index === pages.length - 1 ? "Back Cover" : `Page ${index}`);
+            
+            issues.push({
+                page: index,
+                pageType: pageType,
+                size: validation.formatted,
+                maxSize: `${MAX_SIZE_KB}KB`
+            });
+        }
+    });
+    
+    return issues;
+}
+
+function canSaveBook() {
+    if (pages.length < 2) {
+        return false;
+    }
+    
+    if (!bookData.bookName || bookData.bookName.trim() === "") {
+        return false;
+    }
+    
+    const imageIssues = validateAllBookImages();
+    if (imageIssues.length > 0) {
+        return false;
+    }
+    
+    return true;
+}
+
+function getSaveErrorMessage() {
+    if (pages.length < 2) {
+        return "A book must have at least 2 pages (Cover and Back Cover)";
+    }
+    
+    if (!bookData.bookName || bookData.bookName.trim() === "") {
+        return "Please enter a book name";
+    }
+    
+    const imageIssues = validateAllBookImages();
+    if (imageIssues.length > 0) {
+        const issue = imageIssues[0];
+        if (imageIssues.length === 1) {
+            return `Image too large in ${issue.pageType}: ${issue.size}. Maximum allowed: ${issue.maxSize}`;
+        } else {
+            return `${imageIssues.length} images exceed the maximum size of ${issue.maxSize}`;
+        }
+    }
+    
+    return null;
 }
 
 function initUI() {
@@ -685,6 +927,10 @@ function updateUIAfterPageLoad() {
         
         updateNavigationButtonsState();
         
+        if (pages.length > 0) {
+            sessionStorage.setItem('hasBookLoaded', 'true');
+        }
+        
     } catch (error) {
         console.error("Error updating UI after page load:", error);
     }
@@ -898,72 +1144,374 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-window.addEventListener('beforeunload', function () {
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (!urlParams.has('newBook') && !urlParams.has('loadBook')) {
-        window.location.href = 'welcome.html';
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    if (!window.location.href.includes('welcome.html') && window.location.pathname.includes('Book Editor')) {
-        window.location.href = 'welcome.html';
-    }
-});
-
-window.addEventListener('load', function () {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    if (!urlParams.has('newBook') && !urlParams.has('loadBook')) {
-        window.location.href = 'welcome.html';
-        return;
-    }
-});
-
 window.addEventListener('beforeunload', function (event) {
-    sessionStorage.removeItem('newBookWizardData');
-
-    sessionStorage.setItem('isReloading', 'true');
+    sessionStorage.setItem('directPageReload', 'true');
+    
+    if (pages && pages.length > 0) {
+        const confirmationMessage = 'Warning: All unsaved changes will be lost if you reload the page.';
+        event.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    const isReloading = sessionStorage.getItem('isReloading');
-    const urlParams = new URLSearchParams(window.location.search);
-
-    sessionStorage.removeItem('isReloading');
-
-    if (isReloading === 'true' && (!urlParams.has('newBook') || !urlParams.has('loadBook'))) {
-        window.location.href = 'welcome.html';
+    console.log("DOM loaded, checking navigation state");
+    
+    const isDirectReload = sessionStorage.getItem('directPageReload') === 'true';
+    
+    sessionStorage.removeItem('directPageReload');
+    
+    const inEditor = window.location.pathname.includes('index.html') || 
+                    window.location.pathname.endsWith('/Book Editor/') ||
+                    window.location.pathname.endsWith('/Book Editor');
+    
+    console.log("Navigation state:", {
+        isDirectReload,
+        inEditor,
+        path: window.location.pathname
+    });
+    
+    if (inEditor && isDirectReload) {
+        console.log("F5 refresh detected, redirecting to welcome page");
+        window.location.replace('welcome.html');
         return;
     }
-
-    if (window.location.pathname.endsWith('index.html') &&
-        !urlParams.has('newBook') &&
-        !urlParams.has('loadBook')) {
-        window.location.href = 'welcome.html';
-        return;
+    
+    if (inEditor) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('newBook') && !urlParams.has('loadBook')) {
+            console.log("No proper URL parameters, redirecting to welcome page");
+            window.location.replace('welcome.html');
+            return;
+        }
     }
-});
-
-window.addEventListener('beforeunload', function () {
-    sessionStorage.clear();
-    localStorage.removeItem('newBookWizardData');
-    localStorage.removeItem('loadedBookData');
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const urlParams = new URLSearchParams(window.location.search);
-
-    if (!urlParams.has('newBook') && !urlParams.has('loadBook')) {
-        window.location.href = 'welcome.html';
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
+    
     initUI();
+});
+
+/**
+ * Removes background image from the current page
+ * Updates the UI to reflect the change
+ */
+function removeBackgroundImage() {
+    if (currentPageIndex < 0 || currentPageIndex >= pages.length) return;
+    
+    pages[currentPageIndex].backgroundImage = '';
+    
+    const imagePreview = document.getElementById("image-preview");
+    if (imagePreview) {
+        imagePreview.innerHTML = '';
+        imagePreview.style.backgroundImage = '';
+        imagePreview.style.display = "none";
+    }
+    
+    const pageBgImage = document.getElementById('pageBgImage');
+    if (pageBgImage) {
+        pageBgImage.textContent = "No image selected";
+    }
+    
+    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
+    if (backgroundColorGroup) {
+        backgroundColorGroup.style.display = "block";
+    }
+    
+    updateFlipBook();
+    
+    saveEditorChanges();
+}
+
+const BookManager = {
+    removeBackgroundImage: removeBackgroundImage,
+    
+    getCurrentPage: function() {
+        return currentPageIndex >= 0 && currentPageIndex < pages.length ? 
+            pages[currentPageIndex] : null;
+    },
+    
+    getAllPages: function() {
+        return pages;
+    },
+    
+    getBookData: function() {
+        return bookData;
+    },
+    
+    updatePage: function(index, pageData) {
+        if (index >= 0 && index < pages.length) {
+            pages[index] = {...pages[index], ...pageData};
+            updateFlipBook();
+            saveEditorChanges();
+            return true;
+        }
+        return false;
+    },
+    
+    storeData: function(key, data, errorCallback) {
+        try {
+            localStorage.setItem(key, data);
+            return true;
+        } catch (error) {
+            console.warn('localStorage storage failed:', error);
+            
+            try {
+                let parsedData = JSON.parse(data);
+                let hasRemovedImages = false;
+                
+                const minimalData = { ...parsedData };
+                
+                if (minimalData.coverImage && minimalData.coverImage.length > 10000) {
+                    minimalData.coverImageTooLarge = true;
+                    minimalData.coverImage = '';
+                    hasRemovedImages = true;
+                }
+                
+                if (minimalData.backCoverImage && minimalData.backCoverImage.length > 10000) {
+                    minimalData.backCoverImageTooLarge = true;
+                    minimalData.backCoverImage = '';
+                    hasRemovedImages = true;
+                }
+                
+                if (minimalData.pages && Array.isArray(minimalData.pages)) {
+                    minimalData.pages = minimalData.pages.map(page => {
+                        const newPage = { ...page };
+                        if (newPage.backgroundImage && newPage.backgroundImage.length > 10000) {
+                            newPage.backgroundImageTooLarge = true;
+                            newPage.backgroundImage = '';
+                            hasRemovedImages = true;
+                        }
+                        return newPage;
+                    });
+                }
+                
+                const minimalJson = JSON.stringify(minimalData);
+                localStorage.setItem(key, minimalJson);
+                
+                if (hasRemovedImages && window.notifications) {
+                    window.notifications.warning(
+                        "Your book was saved without images due to browser storage limitations. " +
+                        "The images will need to be added again when you edit the book."
+                    );
+                }
+                return true;
+            } catch (fallbackError) {
+                console.warn('Minimal data storage failed:', fallbackError);
+                
+                try {
+                    let parsedData = JSON.parse(data);
+                    
+                    const essentialData = {
+                        bookName: parsedData.bookName || "Untitled Book",
+                        bookWidth: parsedData.bookWidth || parsedData.width || 350,
+                        bookHeight: parsedData.bookHeight || parsedData.height || 400,
+                        coverColor: parsedData.coverColor || "#DC143C",
+                        backCoverColor: parsedData.backCoverColor || "#DC143C",
+                        pageCount: parsedData.pageCount || (parsedData.pages ? parsedData.pages.length - 2 : 1),
+                        imagesCleaned: true
+                    };
+                    
+                    essentialData.pages = [];
+                    
+                    essentialData.pages.push({
+                        name: "Cover",
+                        width: essentialData.bookWidth,
+                        height: essentialData.bookHeight,
+                        backgroundColor: essentialData.coverColor,
+                        backgroundImage: "",
+                        alignment: "center",
+                        contentHtml: "<p>Your Book Title</p>"
+                    });
+                    
+                    for (let i = 0; i < essentialData.pageCount; i++) {
+                        essentialData.pages.push({
+                            name: `Page ${i + 1}`,
+                            width: essentialData.bookWidth,
+                            height: essentialData.bookHeight,
+                            backgroundColor: "#FFFFFF",
+                            backgroundImage: "",
+                            alignment: "left",
+                            contentHtml: ""
+                        });
+                    }
+                    
+                    essentialData.pages.push({
+                        name: "Back Cover",
+                        width: essentialData.bookWidth,
+                        height: essentialData.bookHeight,
+                        backgroundColor: essentialData.backCoverColor,
+                        backgroundImage: "",
+                        alignment: "center",
+                        contentHtml: ""
+                    });
+                    
+                    sessionStorage.setItem(key, JSON.stringify(essentialData));
+                    sessionStorage.setItem('useSessionStorage', 'true');
+                    
+                    if (window.notifications) {
+                        window.notifications.warning(
+                            "Your book was saved with limited data due to storage limitations. " +
+                            "Images and some content may need to be added again."
+                        );
+                    }
+                    return true;
+                } catch (sessionError) {
+                    console.error('All storage fallbacks failed:', sessionError);
+                    if (errorCallback && typeof errorCallback === 'function') {
+                        errorCallback(sessionError);
+                    }
+                    return false;
+                }
+            }
+        }
+    },
+    
+    /**
+     * Estimates the available localStorage space in bytes
+     * @returns {Object} Object containing total, used and available space in bytes
+     */
+    getStorageInfo: function() {
+        try {
+            const testKey = '_storage_test_';
+            const oneKB = 1024;
+            const estimatedTotal = 5 * 1024 * 1024;
+            
+            let usedSpace = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                usedSpace += (key.length + value.length) * 2;
+            }
+            
+            let testString = '';
+            let testSize = oneKB;
+            let maxSize = 0;
+            
+            try {
+                localStorage.removeItem(testKey);
+                
+                for (let i = 0; i < 1024; i++) {
+                    testString += new Array(1025).join('a');
+                }
+                
+                let iterations = 0;
+                const maxIterations = 20;
+                
+                while (iterations < maxIterations) {
+                    try {
+                        localStorage.setItem(testKey, testString);
+                        maxSize = testString.length * 2;
+                        testString += testString;
+                        iterations++;
+                    } catch (e) {
+                        break;
+                    }
+                }
+                
+                localStorage.removeItem(testKey);
+            } catch (e) {
+                console.warn('Error estimating storage size:', e);
+                maxSize = estimatedTotal;
+            }
+            
+            const totalSpace = Math.max(maxSize + usedSpace, estimatedTotal);
+            const availableSpace = totalSpace - usedSpace;
+            
+            return {
+                total: totalSpace,
+                used: usedSpace,
+                available: availableSpace
+            };
+        } catch (e) {
+            console.error('Failed to estimate storage space:', e);
+            return {
+                total: 5 * 1024 * 1024,
+                used: 0,
+                available: 5 * 1024 * 1024
+            };
+        }
+    },
+    
+    /**
+     * Formats bytes into a human-readable string
+     * @param {number} bytes - Number of bytes
+     * @returns {string} Formatted string (e.g., "4.2 MB")
+     */
+    formatBytes: function(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+    
+    /**
+     * Checks if an image is likely to exceed available storage space
+     * @param {string} imageDataUrl - The image data URL to check
+     * @returns {boolean} True if the image is likely too large
+     */
+    isImageTooLarge: function(imageDataUrl) {
+        if (!imageDataUrl) return false;
+        
+        const storageInfo = this.getStorageInfo();
+        const imageSize = imageDataUrl.length * 2;
+        
+        return imageSize > (storageInfo.available * 0.8);
+    },
+    
+    /**
+     * Displays storage information
+     * @param {string} containerId - ID of the container to display info in
+     */
+    displayStorageInfo: function(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const storageInfo = this.getStorageInfo();
+        
+        const usedFormatted = this.formatBytes(storageInfo.used);
+        const totalFormatted = this.formatBytes(storageInfo.total);
+        const availableFormatted = this.formatBytes(storageInfo.available);
+        
+        const percentUsed = Math.round((storageInfo.used / storageInfo.total) * 100);
+        
+        container.innerHTML = `
+            <div class="storage-info">
+                <div class="storage-meter">
+                    <div class="storage-bar" style="width: ${percentUsed}%; 
+                         background-color: ${percentUsed > 80 ? '#e53935' : 
+                                            (percentUsed > 60 ? '#ffb74d' : '#4caf50')};">
+                    </div>
+                </div>
+                <div class="storage-text">
+                    Storage: ${usedFormatted} used of ${totalFormatted} (${availableFormatted} available)
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.removeBackgroundImage = removeBackgroundImage;
+window.BookManager = BookManager;
+
+document.addEventListener('DOMContentLoaded', function() {
+    let storageInfoContainer = document.getElementById('storage-info-container');
+    if (storageInfoContainer) {
+        storageInfoContainer.style.display = 'none';
+    } else {
+        storageInfoContainer = document.createElement('div');
+        storageInfoContainer.id = 'storage-info-container';
+        storageInfoContainer.style.display = 'none';
+        document.body.appendChild(storageInfoContainer);
+    }
+    
+    if (BookManager && typeof BookManager.displayStorageInfo === 'function') {
+        BookManager.displayStorageInfo('storage-info-container');
+        
+        setInterval(function() {
+            BookManager.displayStorageInfo('storage-info-container');
+        }, 5000);
+    }
 });
 
 window.addEventListener("load", init);

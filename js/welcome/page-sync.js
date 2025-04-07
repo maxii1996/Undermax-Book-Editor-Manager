@@ -10,37 +10,48 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(forceUpdatePagesVisual, 200);
     
     function forceUpdatePagesVisual() {
-        if (typeof updatePagesVisual === 'function') {
-            updatePagesVisual();
-        } else if (typeof window.updatePagesVisual === 'function') {
-            window.updatePagesVisual();
-        } else {
-            console.warn('La función updatePagesVisual no está disponible, intentando cargar desde welcome-wizard.js');
-            
-            const script = document.createElement('script');
-            script.src = 'js/welcome/welcome-wizard.js';
-            script.onload = function() {
+        const pagesContainer = document.getElementById('pages-visual-container');
+        if (!pagesContainer) return;
+
+        // Create a script to update the page icons
+        const script = document.createElement('script');
+        script.textContent = `
+            (function() {
                 if (typeof window.updatePagesVisual === 'function') {
-                    window.updatePagesVisual();
-                } else {
-                    console.error('No se pudo cargar updatePagesVisual incluso después de cargar el script');
-                    
-                    if (typeof updatePageIcons === 'function') {
-                        const pageCount = parseInt(document.getElementById('wizard-page-count').value) || 1;
-                        updatePageIcons(pageCount);
-                    } else if (window.bookData && typeof window.bookData.pageCount !== 'undefined') {
+                    try {
+                        // Get the current page count
                         const pageCountElement = document.getElementById('wizard-page-count');
                         if (pageCountElement) {
-                            const pageCount = parseInt(pageCountElement.value) || window.bookData.pageCount || 1;
-                            if (typeof window.updatePageIcons === 'function') {
-                                window.updatePageIcons(pageCount);
+                            const pageCount = parseInt(pageCountElement.value) || 1;
+                            
+                            // Update window.bookData with the latest page count
+                            if (!window.bookData) window.bookData = {};
+                            window.bookData.pageCount = pageCount;
+                            
+                            // Update the page icons
+                            window.updatePagesVisual();
+                            
+                            // Update summary if it exists
+                            const summaryPages = document.getElementById('summary-pages');
+                            if (summaryPages) {
+                                summaryPages.textContent = \`\${pageCount + 2} (\${pageCount} inner pages + front and back cover)\`;
                             }
                         }
+                    } catch (e) {
+                        console.error("Error updating pages visual:", e);
                     }
                 }
-            };
-            document.head.appendChild(script);
+            })();
+        `;
+        
+        // Remove any previously added script
+        const oldScript = document.getElementById('update-pages-script');
+        if (oldScript) {
+            oldScript.remove();
         }
+        
+        script.id = 'update-pages-script';
+        document.head.appendChild(script);
     }
     
     const observer = new MutationObserver(function(mutations) {

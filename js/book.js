@@ -482,6 +482,62 @@ function setupDimensionsListeners() {
     document.getElementById("resetDimensions").addEventListener("click", function () {
         resetDimensionsToDefault();
     });
+    
+    setupDimensionPresets();
+}
+
+function setupDimensionPresets() {
+    const presetButtons = document.querySelectorAll('.dimension-presets.editor-presets .preset-btn');
+    const bookWidthInput = document.getElementById("bookWidth");
+    const bookHeightInput = document.getElementById("bookHeight");
+    
+    if (!presetButtons.length || !bookWidthInput || !bookHeightInput) return;
+    
+    function updateActivePreset() {
+        const currentWidth = parseInt(bookWidthInput.value) || 0;
+        const currentHeight = parseInt(bookHeightInput.value) || 0;
+        
+        presetButtons.forEach(btn => {
+            const presetWidth = parseInt(btn.getAttribute('data-width')) || 0;
+            const presetHeight = parseInt(btn.getAttribute('data-height')) || 0;
+            
+            if (currentWidth === presetWidth && currentHeight === presetHeight) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+    
+    updateActivePreset();
+    
+    presetButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const width = this.getAttribute('data-width');
+            const height = this.getAttribute('data-height');
+            
+            if (bookWidthInput && bookHeightInput && width && height) {
+                bookWidthInput.value = width;
+                bookHeightInput.value = height;
+                
+                presetButtons.forEach(b => b.classList.remove('active'));
+                
+                this.classList.add('active');
+                
+                if (typeof updateAllPageDimensions === 'function') {
+                    updateAllPageDimensions();
+                }
+            }
+        });
+    });
+    
+    if (bookWidthInput) {
+        bookWidthInput.addEventListener('change', updateActivePreset);
+    }
+    
+    if (bookHeightInput) {
+        bookHeightInput.addEventListener('change', updateActivePreset);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', setupDimensionsListeners);
@@ -495,6 +551,30 @@ function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (BookImageUtils.isFileTooLarge(file, 500)) {
+        event.target.value = '';
+        
+        const sizeStr = BookImageUtils.formatFileSize(file.size);
+        if (window.notifications) {
+            window.notifications.error(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+        } else {
+            alert(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+        }
+        
+        const imagePreview = document.getElementById("image-preview");
+        if (imagePreview) {
+            imagePreview.innerHTML = `<div class="image-error">File too large: ${sizeStr}.<br>Maximum allowed: 500KB</div>`;
+            imagePreview.style.display = "flex";
+            
+            setTimeout(() => {
+                imagePreview.style.display = "none";
+                imagePreview.innerHTML = '';
+            }, 5000);
+        }
+        
+        return;
+    }
+
     const imagePreview = document.getElementById("image-preview");
     if (imagePreview) {
         imagePreview.innerHTML = '<div class="image-loading">Processing image...</div>';
@@ -507,6 +587,13 @@ function handleImageUpload(event) {
             optimizeImage(e.target.result, (optimizedImage) => {
                 document.getElementById("pageBgImage").textContent = file.name;
                 pages[currentPageIndex].backgroundImage = optimizedImage;
+
+                const imagePreview = document.getElementById("image-preview");
+                if (imagePreview) {
+                    imagePreview.innerHTML = '';
+                    imagePreview.style.backgroundImage = `url(${optimizedImage})`;
+                    imagePreview.style.display = "block";
+                }
 
                 requestAnimationFrame(() => {
                     const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
@@ -570,9 +657,9 @@ function removeBackgroundImage() {
         
         const imagePreview = document.getElementById("image-preview");
         if (imagePreview) {
+            imagePreview.innerHTML = '';
             imagePreview.style.backgroundImage = '';
             imagePreview.style.display = "none";
-            imagePreview.innerHTML = '';
         }
 
         const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
@@ -716,11 +803,14 @@ function loadPageIntoEditor(index) {
             if (imagePreview) {
                 imagePreview.style.backgroundImage = `url(${p.backgroundImage})`;
                 imagePreview.style.display = "block";
+                imagePreview.innerHTML = '';
             }
             
             if (backgroundColorGroup) {
                 backgroundColorGroup.style.display = "none";
             }
+            
+            updateRemoveImageButtonState();
         } catch (e) {
             console.error("Error loading background image:", e);
             if (pageBgImageEl) pageBgImageEl.textContent = "Error loading image";
@@ -927,6 +1017,116 @@ function hideValidationProgress() {
     }
 }
 
+function validateBookImages() {
+    return new Promise(async (resolve, reject) => {
+        const imageIssues = [];
+        let isProcessing = false;
+        let processedCount = 0;
+        
+        showValidationProgress();
+        updateValidationProgress(0, pages.length);
+        
+        if (typeof BookImageUtils === 'undefined') {
+            window.BookImageUtils = {
+                validateImageSize: function(dataUrl, maxSizeKB) {
+                    if (!dataUrl || typeof dataUrl !== 'string') {
+                        return { valid: true, size: 0, formatted: '0 KB' };
+                    }
+                    
+                    const sizeInBytes = Math.ceil(dataUrl.length * 0.75);
+                    const sizeInKB = sizeInBytes / 1024;
+                    
+                    return {
+                        valid: sizeInKB <= maxSizeKB,
+                        size: sizeInBytes,
+                        sizeKB: sizeInKB,
+                        formatted: this.formatFileSize(sizeInBytes),
+                        maxSize: maxSizeKB
+                    };
+                },
+                formatFileSize: function(bytes) {
+                    if (bytes < 1024) {
+                        return bytes + ' B';
+                    } else if (bytes < 1024 * 1024) {
+                        return (bytes / 1024).toFixed(1) + ' KB';
+                    } else {
+                        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+                    }
+                },
+                autoOptimizeImage: function(dataUrl, maxSizeKB) {
+                    const validation = this.validateImageSize(dataUrl, maxSizeKB);
+                    return Promise.resolve({
+                        optimized: false,
+                        dataUrl: dataUrl,
+                        valid: validation.valid,
+                        size: validation.size,
+                        formatted: validation.formatted
+                    });
+                }
+            };
+            console.warn("BookImageUtils not found, using fallback implementation");
+        }
+        
+        async function processPage(index) {
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            const page = pages[index];
+            const pageType = index === 0 ? "Front Cover" : (index === pages.length - 1 ? "Back Cover" : `Page ${index}`);
+            
+            if (page.backgroundImage && typeof page.backgroundImage === 'string' && page.backgroundImage.trim() !== '') {
+                const validation = BookImageUtils.validateImageSize(page.backgroundImage, 500);
+                
+                if (!validation.valid) {
+                    const optimizationResult = await BookImageUtils.autoOptimizeImage(page.backgroundImage, 500);
+                    
+                    if (optimizationResult.valid) {
+                        pages[index].backgroundImage = optimizationResult.dataUrl;
+                        imageIssues.push({
+                            page: index,
+                            pageType: pageType,
+                            issue: `Image optimized from ${optimizationResult.original.formatted} to ${optimizationResult.formatted}`,
+                            type: 'optimized',
+                            fixed: true
+                        });
+                    } else {
+                        imageIssues.push({
+                            page: index,
+                            pageType: pageType,
+                            issue: `Background image too large (${validation.formatted}). Maximum allowed: 500KB`,
+                            type: 'oversized',
+                            fixed: false
+                        });
+                    }
+                }
+            }
+            
+            processedCount++;
+            updateValidationProgress(processedCount, pages.length);
+            isProcessing = false;
+            
+            if (processedCount === pages.length) {
+                hideValidationProgress();
+                
+                const unfixedIssues = imageIssues.filter(issue => !issue.fixed);
+                if (unfixedIssues.length > 0) {
+                    reject(unfixedIssues);
+                } else if (imageIssues.length > 0) {
+                    const message = `${imageIssues.length} large image${imageIssues.length > 1 ? 's were' : ' was'} automatically optimized`;
+                    notifications.success(message);
+                    resolve();
+                } else {
+                    resolve();
+                }
+            }
+        }
+        
+        for (let i = 0; i < pages.length; i++) {
+            await processPage(i);
+        }
+    });
+}
+
 function showValidationErrors(issues) {
     let errorDialog = document.getElementById('validation-errors');
 
@@ -940,8 +1140,13 @@ function showValidationErrors(issues) {
 
     let errorListHTML = '';
     issues.forEach(issue => {
-        errorListHTML += `<li><strong>${issue.pageType}</strong>: ${issue.issue}</li>`;
+        const issueClass = issue.type === 'oversized' ? 'error-item' : '';
+        errorListHTML += `<li class="${issueClass}"><strong>${issue.pageType}</strong>: ${issue.issue}</li>`;
     });
+
+    const hasImageIssues = issues.some(issue => issue.type === 'oversized');
+    const helpText = hasImageIssues ? 
+        '<p class="help-text">Large images may cause storage issues or slow performance. Please optimize your images before uploading.</p>' : '';
 
     errorDialog.innerHTML = `
         <div class="dialog-content">
@@ -956,6 +1161,7 @@ function showValidationErrors(issues) {
                 <ul class="error-list">
                     ${errorListHTML}
                 </ul>
+                ${helpText}
                 <div class="dialog-actions">
                     <button id="validation-ok-btn" class="modern-button">OK</button>
                 </div>
@@ -965,25 +1171,12 @@ function showValidationErrors(issues) {
 
     document.body.appendChild(errorDialog);
 
-    errorDialog.style.display = 'flex';
     setTimeout(() => {
         errorDialog.classList.add('show');
     }, 10);
 
-    document.getElementById('close-validation-errors').addEventListener('click', () => {
-        hideValidationErrors();
-    });
-
-    document.getElementById('validation-ok-btn').addEventListener('click', () => {
-        hideValidationErrors();
-
-        if (issues.length > 0) {
-            saveEditorChanges();
-            loadPageIntoEditor(issues[0].page);
-            renderPageList();
-            updateFlipBook();
-        }
-    });
+    document.getElementById('close-validation-errors').addEventListener('click', hideValidationErrors);
+    document.getElementById('validation-ok-btn').addEventListener('click', hideValidationErrors);
 }
 
 function hideValidationErrors() {
@@ -1008,6 +1201,9 @@ function downloadJSON() {
     }
 
     validateAllPages()
+        .then(() => {
+            return validateBookImages();
+        })
         .then(() => {
             const data = {
                 bookName: bookData.bookName,
@@ -1058,13 +1254,10 @@ function handleFileLoad(event) {
     if (!file) return;
 
     if (pages.length > 0) {
-        window.confirm("Loading a new book will replace your current work. Continue?").then(result => {
-            if (result) {
-                processBookFile(file);
-            } else {
-                event.target.value = '';
-            }
-        });
+        const confirmMessage = "Loading a new book will replace your current work. Continue?";
+        if (window.confirm(confirmMessage)) {
+            processBookFile(file);
+        }
     } else {
         processBookFile(file);
     }
@@ -1076,7 +1269,8 @@ function processBookFile(file) {
     const reader = new FileReader();
     reader.onload = function (e) {
         try {
-            const newData = JSON.parse(file);
+            const fileContent = e.target.result;
+            const newData = JSON.parse(fileContent);
 
             if (newData.bookName === undefined || newData.pages === undefined) {
                 throw new Error("Invalid book file format.");
@@ -1108,10 +1302,18 @@ function processBookFile(file) {
             updateFlipBook();
             saveSettings();
 
-            BookEditorNotifications.bookLoaded(bookData.bookName || "Untitled Book");
+            if (typeof BookEditorNotifications !== 'undefined') {
+                BookEditorNotifications.bookLoaded(bookData.bookName || "Untitled Book");
+            } else {
+                notifications.success("Book loaded successfully!");
+            }
         } catch (error) {
             console.error("Error parsing JSON file:", error);
-            BookEditorNotifications.bookLoadError(error.message);
+            if (typeof BookEditorNotifications !== 'undefined') {
+                BookEditorNotifications.bookLoadError(error.message);
+            } else {
+                notifications.error("Error loading book: " + error.message);
+            }
         }
     };
 

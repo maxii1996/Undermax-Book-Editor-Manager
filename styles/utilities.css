@@ -348,3 +348,85 @@
 .wizard-content::-webkit-scrollbar-thumb:hover {
     background: rgba(80, 80, 80, 0.6);
 }
+
+.dimension-presets.editor-presets {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 5px 0;
+}
+
+.dimension-presets.editor-presets .preset-btn {
+    background: linear-gradient(to bottom, #3C3C3C, #353535);
+    color: #ECECEC;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dimension-presets.editor-presets .preset-btn:hover {
+    background: linear-gradient(to bottom, #4C4C4C, #424242);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dimension-presets.editor-presets .preset-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dimension-presets.editor-presets .preset-btn.active {
+    background: linear-gradient(to bottom, #0078D7, #006CC1);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 120, 215, 0.5);
+}
+
+.dimension-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.dimension-actions .apply-btn {
+    background: linear-gradient(to bottom, #0078D7, #006CC1);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dimension-actions .apply-btn:hover {
+    background: linear-gradient(to bottom, #0086F0, #0078D7);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dimension-actions .reset-btn {
+    background: linear-gradient(to bottom, #555555, #444444);
+    color: #E0E0E0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dimension-actions .reset-btn:hover {
+    background: linear-gradient(to bottom, #666666, #555555);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}

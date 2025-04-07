@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
         pageCount: 2
     };
 
+    const MAX_IMAGE_SIZE_KB = 500;
+    let frontCoverImageValid = true;
+    let backCoverImageValid = true;
+
     let currentStep = 1;
 
     newBookBtn.addEventListener('click', showWizard);
@@ -69,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const coverColorInput = document.getElementById('wizard-cover-color');
     const coverColorPreview = document.getElementById('cover-color-preview');
     const coverImageBtn = document.getElementById('cover-image-btn');
-    const coverImageInput = document.getElementById('cover-image-input');
+    let coverImageInput = document.getElementById('cover-image-input');
     const coverImageName = document.getElementById('cover-image-name');
     const coverImageRemoveBtn = document.getElementById('cover-image-remove-btn');
 
@@ -82,12 +86,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCoverPreview();
         updatePageIcons(bookData.pageCount);
         updateCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     document.getElementById('cover-image').addEventListener('change', function () {
         bookData.coverType = 'image';
         updateCoverPreview();
         updateCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     coverColorInput.addEventListener('input', function () {
@@ -142,6 +148,78 @@ document.addEventListener('DOMContentLoaded', function () {
     coverImageInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (file) {
+            let sizeIndicator = document.querySelector('.front-cover-size-indicator');
+            if (sizeIndicator) {
+                sizeIndicator.textContent = '';
+                sizeIndicator.className = 'image-size-indicator front-cover-size-indicator';
+            }
+
+            if (window.BookImageUtils && typeof window.BookImageUtils.isFileTooLarge === 'function') {
+                if (BookImageUtils.isFileTooLarge(file, MAX_IMAGE_SIZE_KB)) {
+                    this.value = '';
+
+                    let sizeStr = '';
+                    try {
+                        sizeStr = BookImageUtils.formatFileSize(file.size);
+                    } catch (e) {
+                        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        sizeStr = sizeMB + 'MB';
+                    }
+
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+                    } else {
+                        alert(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+                    }
+
+                    if (!sizeIndicator) {
+                        sizeIndicator = document.createElement('div');
+                        sizeIndicator.className = 'image-size-indicator front-cover-size-indicator error';
+                        this.parentElement.appendChild(sizeIndicator);
+                    }
+
+                    sizeIndicator.textContent = `File too large: ${sizeStr}. Maximum allowed: 500KB`;
+
+                    frontCoverImageValid = false;
+                    updateNextButtonState();
+                    return;
+                }
+            } else {
+                console.warn("BookImageUtils not available, skipping size check");
+                if (file.size > (MAX_IMAGE_SIZE_KB * 1024)) {
+                    this.value = '';
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeMB}MB). Please use an image smaller than 500KB.`);
+                    } else {
+                        alert(`Image too large (${sizeMB}MB). Please use an image smaller than 500KB.`);
+                    }
+
+                    frontCoverImageValid = false;
+                    updateNextButtonState();
+                    return;
+                }
+            }
+
+            frontCoverImageValid = true;
+
+            if (!sizeIndicator) {
+                sizeIndicator = document.createElement('div');
+                sizeIndicator.className = 'image-size-indicator front-cover-size-indicator';
+                this.parentElement.appendChild(sizeIndicator);
+            }
+
+            let sizeStr = '';
+            try {
+                sizeStr = window.BookImageUtils ? BookImageUtils.formatFileSize(file.size) : (file.size / 1024).toFixed(0) + 'KB';
+            } catch (e) {
+                sizeStr = (file.size / 1024).toFixed(0) + 'KB';
+            }
+
+            sizeIndicator.textContent = `File size: ${sizeStr} (OK)`;
+            sizeIndicator.className = 'image-size-indicator front-cover-size-indicator success';
+
             coverImageName.textContent = file.name;
             document.getElementById('cover-image').checked = true;
             bookData.coverType = 'image';
@@ -169,9 +247,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const radioEvent = new Event('change');
         document.getElementById('cover-color').dispatchEvent(radioEvent);
 
+        let sizeIndicator = document.querySelector('.front-cover-size-indicator');
+        if (sizeIndicator) {
+            sizeIndicator.textContent = '';
+            sizeIndicator.className = 'image-size-indicator front-cover-size-indicator';
+        }
+
+        frontCoverImageValid = false;
+
         updateCoverPreview();
         updatePageIcons(bookData.pageCount);
         updateCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     function updateCoverRemoveButtonVisibility() {
@@ -185,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const backCoverColorInput = document.getElementById('wizard-back-cover-color');
     const backCoverColorPreview = document.getElementById('back-cover-color-preview');
     const backCoverImageBtn = document.getElementById('back-cover-image-btn');
-    const backCoverImageInput = document.getElementById('back-cover-image-input');
+    let backCoverImageInput = document.getElementById('back-cover-image-input');
     const backCoverImageName = document.getElementById('back-cover-image-name');
     const backCoverImageRemoveBtn = document.getElementById('back-cover-image-remove-btn');
 
@@ -198,12 +285,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updateBackCoverPreview();
         updatePageIcons(bookData.pageCount);
         updateBackCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     document.getElementById('back-cover-image').addEventListener('change', function () {
         bookData.backCoverType = 'image';
         updateBackCoverPreview();
         updateBackCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     function updateBackCoverPreview() {
@@ -258,6 +347,78 @@ document.addEventListener('DOMContentLoaded', function () {
     backCoverImageInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (file) {
+            let sizeIndicator = document.querySelector('.back-cover-size-indicator');
+            if (sizeIndicator) {
+                sizeIndicator.textContent = '';
+                sizeIndicator.className = 'image-size-indicator back-cover-size-indicator';
+            }
+
+            if (window.BookImageUtils && typeof window.BookImageUtils.isFileTooLarge === 'function') {
+                if (BookImageUtils.isFileTooLarge(file, MAX_IMAGE_SIZE_KB)) {
+                    this.value = '';
+
+                    let sizeStr = '';
+                    try {
+                        sizeStr = BookImageUtils.formatFileSize(file.size);
+                    } catch (e) {
+                        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                        sizeStr = sizeMB + 'MB';
+                    }
+
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+                    } else {
+                        alert(`Image too large (${sizeStr}). Please use an image smaller than 500KB.`);
+                    }
+
+                    if (!sizeIndicator) {
+                        sizeIndicator = document.createElement('div');
+                        sizeIndicator.className = 'image-size-indicator back-cover-size-indicator error';
+                        this.parentElement.appendChild(sizeIndicator);
+                    }
+
+                    sizeIndicator.textContent = `File too large: ${sizeStr}. Maximum allowed: 500KB`;
+
+                    backCoverImageValid = false;
+                    updateNextButtonState();
+                    return;
+                }
+            } else {
+                console.warn("BookImageUtils not available, skipping size check");
+                if (file.size > (MAX_IMAGE_SIZE_KB * 1024)) {
+                    this.value = '';
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    if (window.notifications) {
+                        window.notifications.error(`Image too large (${sizeMB}MB). Please use an image smaller than 500KB.`);
+                    } else {
+                        alert(`Image too large (${sizeMB}MB). Please use an image smaller than 500KB.`);
+                    }
+
+                    backCoverImageValid = false;
+                    updateNextButtonState();
+                    return;
+                }
+            }
+
+            backCoverImageValid = true;
+
+            if (!sizeIndicator) {
+                sizeIndicator = document.createElement('div');
+                sizeIndicator.className = 'image-size-indicator back-cover-size-indicator';
+                this.parentElement.appendChild(sizeIndicator);
+            }
+
+            let sizeStr = '';
+            try {
+                sizeStr = window.BookImageUtils ? BookImageUtils.formatFileSize(file.size) : (file.size / 1024).toFixed(0) + 'KB';
+            } catch (e) {
+                sizeStr = (file.size / 1024).toFixed(0) + 'KB';
+            }
+
+            sizeIndicator.textContent = `File size: ${sizeStr} (OK)`;
+            sizeIndicator.className = 'image-size-indicator back-cover-size-indicator success';
+
             backCoverImageName.textContent = file.name;
             document.getElementById('back-cover-image').checked = true;
             bookData.backCoverType = 'image';
@@ -285,9 +446,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const radioEvent = new Event('change');
         document.getElementById('back-cover-color').dispatchEvent(radioEvent);
 
+        let sizeIndicator = document.querySelector('.back-cover-size-indicator');
+        if (sizeIndicator) {
+            sizeIndicator.textContent = '';
+            sizeIndicator.className = 'image-size-indicator back-cover-size-indicator';
+        }
+
+        backCoverImageValid = false;
+
         updateBackCoverPreview();
         updatePageIcons(bookData.pageCount);
         updateBackCoverRemoveButtonVisibility();
+        updateNextButtonState();
     });
 
     function updateBackCoverRemoveButtonVisibility() {
@@ -305,6 +475,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const count = parseInt(this.value) || 0;
         bookData.pageCount = count;
         updatePageIcons(count);
+        
+        if (currentStep === 6) {
+            updateSummary();
+        }
     });
 
     function updatePageIcons(count) {
@@ -398,6 +572,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             if (currentStep === 6) {
+                const pageCountInput = document.getElementById('wizard-page-count');
+                if (pageCountInput && bookData) {
+                    bookData.pageCount = parseInt(pageCountInput.value) || 1;
+                }
                 updateSummary();
             }
         }
@@ -424,17 +602,57 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateNextButtonState() {
-        if (currentStep === 1) {
-            nextStepBtn.disabled = bookData.name.trim() === '';
+        const nextButton = document.getElementById('next-step-btn');
+        if (!nextButton) return;
+        
+        const wizardSteps = document.querySelectorAll('.wizard-step');
+        let currentStep = 1;
+
+        for (const step of wizardSteps) {
+            if (window.getComputedStyle(step).display !== 'none') {
+                currentStep = parseInt(step.getAttribute('data-step') || '1');
+                break;
+            }
+        }
+        
+        if (currentStep === 3) {
+            const frontCoverType = document.querySelector('input[name="cover-type"]:checked')?.value;
+            const isFrontCoverImage = frontCoverType === 'image' || document.getElementById('cover-image')?.checked;
+            
+            if (isFrontCoverImage) {
+                nextButton.disabled = !frontCoverImageValid || !bookData.coverImage;
+            } else {
+                nextButton.disabled = false;
+            }
+        } else if (currentStep === 4) {
+            const backCoverType = document.querySelector('input[name="back-cover-type"]:checked')?.value;
+            const isBackCoverImage = backCoverType === 'image' || document.getElementById('back-cover-image')?.checked;
+            
+            if (isBackCoverImage) {
+                nextButton.disabled = !backCoverImageValid || !bookData.backCoverImage;
+            } else {
+                nextButton.disabled = false;
+            }
+        } else if (currentStep === 1) {
+            const bookName = document.getElementById('wizard-book-name')?.value.trim() || '';
+            nextButton.disabled = bookName.length === 0;
         } else {
-            nextStepBtn.disabled = false;
+            nextButton.disabled = false;
         }
     }
 
+    document.querySelectorAll('input[name="cover-type"], input[name="back-cover-type"]').forEach(radio => {
+        radio.addEventListener('change', updateNextButtonState);
+    });
+
     function updateSummary() {
+        const pageCount = parseInt(bookData.pageCount) || 0;
+        const totalPages = pageCount + 2;
+        
         document.getElementById('summary-name').textContent = bookData.name;
         document.getElementById('summary-dimensions').textContent = `${bookData.width} × ${bookData.height} pixels`;
-        document.getElementById('summary-pages').textContent = `${bookData.pageCount + 2} (Front Cover + ${bookData.pageCount} inner pages + Back Cover)`;
+        document.getElementById('summary-pages').textContent = 
+            `${totalPages} (Front Cover + ${pageCount} inner pages + Back Cover)`;
     }
 
     function createBook() {
@@ -498,13 +716,25 @@ document.addEventListener('DOMContentLoaded', function () {
         reader.onload = function (e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (!data.pages || !Array.isArray(data.pages)) {
-                    notifications.error("Invalid book file format.");
+                
+                if (!data.pages || !Array.isArray(data.pages) || data.pages.length < 2) {
+                    notifications.error("Invalid book file format. The book must have at least 2 pages.");
                     return;
                 }
+                
+                const processedData = {
+                    ...data,
+                    bookName: data.bookName || "Untitled Book",
+                    bookWidth: data.bookWidth || data.width || 350,
+                    bookHeight: data.bookHeight || data.height || 400,
+                    coverColor: data.coverColor || "#DC143C",
+                    backCoverColor: data.backCoverColor || "#DC143C",
+                    editorColor: data.editorColor || "#FFFFFF"
+                };
 
-                sessionStorage.setItem('loadedBookData', e.target.result);
-
+                sessionStorage.setItem('loadedBookData', JSON.stringify(processedData));
+                sessionStorage.setItem('isLoadingBook', 'true');
+                
                 notifications.success('Book loaded successfully!');
 
                 setTimeout(() => {
@@ -515,6 +745,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error("Error parsing JSON file:", error);
                 notifications.error("Error loading book: " + error.message);
             }
+        };
+
+        reader.onerror = function() {
+            notifications.error("Error reading file. Please try again.");
         };
 
         reader.readAsText(file);
@@ -631,38 +865,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('cover-color').addEventListener('change', function () {
             document.querySelectorAll('[name="cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
             bookData.coverType = 'color';
             updateCoverRemoveButtonVisibility();
+            updateNextButtonState();
         });
 
         document.getElementById('cover-image').addEventListener('change', function () {
             document.querySelectorAll('[name="cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
             bookData.coverType = 'image';
             updateCoverRemoveButtonVisibility();
+            updateNextButtonState();
         });
 
         document.getElementById('back-cover-color').addEventListener('change', function () {
             document.querySelectorAll('[name="back-cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
             bookData.backCoverType = 'color';
             updateBackCoverRemoveButtonVisibility();
+            updateNextButtonState();
         });
 
         document.getElementById('back-cover-image').addEventListener('change', function () {
             document.querySelectorAll('[name="back-cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
             bookData.backCoverType = 'image';
             updateBackCoverRemoveButtonVisibility();
+            updateNextButtonState();
         });
 
         if (document.getElementById('cover-color').checked) {
@@ -686,12 +924,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (this.checked) {
             bookData.coverType = 'color';
             document.querySelectorAll('[name="cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
 
             updateCoverPreview();
             updateCoverRemoveButtonVisibility();
+            updateNextButtonState();
         }
     });
 
@@ -705,12 +944,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (this.checked) {
             bookData.backCoverType = 'color';
             document.querySelectorAll('[name="back-cover-type"]').forEach(radio => {
-                radio.closest('.cover-option').classList.remove('selected');
+                radio.closest('.cover-option')?.classList.remove('selected');
             });
-            this.closest('.cover-option').classList.add('selected');
+            this.closest('.cover-option')?.classList.add('selected');
 
             updateBackCoverPreview();
             updateBackCoverRemoveButtonVisibility();
+            updateNextButtonState();
         }
     });
 });
@@ -724,7 +964,7 @@ function createBookFromWizard() {
     const bookHeight = parseInt(document.getElementById('wizard-book-height').value) || 400;
     const pagesCount = Math.max(1, parseInt(document.getElementById('wizard-page-count').value) || 1);
     
-    console.log(`Creando libro con ${pagesCount} páginas internas (+ portada y contraportada)`);
+    console.log(`Creating book with ${pagesCount} internal pages (+ front and back cover)`);
     
     const coverType = document.getElementById('cover-color').checked ? 'color' : 'image';
     const coverColor = document.getElementById('wizard-cover-color').value || '#DC143C';
@@ -768,6 +1008,21 @@ function createBookFromWizard() {
         contentHtml: ""
     });
     
+    console.log("Creating book with:", {
+        pageCount: pagesCount,
+        totalPages: pages.length,
+        hasImages: {
+            cover: Boolean(coverImage),
+            backCover: Boolean(backCoverImage)
+        }
+    });
+    
+    if (pages.length < 2) {
+        console.error("Failed to create sufficient pages");
+        notifications.error("Error creating book: Invalid page count");
+        return;
+    }
+    
     const bookData = {
         bookName: bookName,
         bookWidth: bookWidth,
@@ -781,6 +1036,8 @@ function createBookFromWizard() {
         pageCount: pagesCount,
         pages: pages
     };
+    
+    console.log("Saving book data with pages:", bookData.pages.length);
     
     let storageSuccess = false;
     if (window.BookImageUtils) {
@@ -796,8 +1053,8 @@ function createBookFromWizard() {
     }
     
     if (storageSuccess) {
-        console.log(`Se han guardado en localStorage ${pages.length} páginas`);
-        console.log('Datos de libro guardados:', bookData);
+        console.log(`Successfully saved ${pages.length} pages to localStorage`);
+        console.log('Book data saved:', bookData);
         
         sessionStorage.setItem('fromWelcome', 'true');
         

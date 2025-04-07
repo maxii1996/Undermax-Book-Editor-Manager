@@ -4,10 +4,6 @@
  */
 
 function updatePagesVisual() {
-    if (typeof window.updatePagesVisual === 'function' && window.updatePagesVisual !== updatePagesVisual) {
-        return window.updatePagesVisual();
-    }
-    
     const pagesCount = parseInt(document.getElementById('wizard-page-count')?.value) || 1;
     const pagesContainer = document.getElementById('pages-visual-container');
     if (!pagesContainer) return;
@@ -16,7 +12,6 @@ function updatePagesVisual() {
     
     const totalPages = pagesCount + 2;
     
-    // Create front cover with proper style
     const coverIcon = document.createElement('div');
     coverIcon.className = 'page-item cover';
     coverIcon.textContent = 'FRONT';
@@ -24,7 +19,6 @@ function updatePagesVisual() {
     if (window.bookData && window.bookData.coverType === 'image' && window.bookData.coverImage) {
         coverIcon.style.backgroundImage = `url(${window.bookData.coverImage})`;
         coverIcon.style.backgroundColor = 'transparent';
-        // Ensure no transform is initially applied
         coverIcon.style.transform = 'none';
     } else if (window.bookData) {
         coverIcon.style.backgroundColor = window.bookData.coverColor || '#DC143C';
@@ -61,7 +55,6 @@ function updatePagesVisual() {
         }
     }
     
-    // Create back cover with proper style
     const backIcon = document.createElement('div');
     backIcon.className = 'page-item back';
     backIcon.textContent = 'BACK';
@@ -69,7 +62,6 @@ function updatePagesVisual() {
     if (window.bookData && window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) {
         backIcon.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
         backIcon.style.backgroundColor = 'transparent';
-        // Ensure no transform is initially applied
         backIcon.style.transform = 'none';
     } else if (window.bookData) {
         backIcon.style.backgroundColor = window.bookData.backCoverColor || '#DC143C';
@@ -81,6 +73,10 @@ function updatePagesVisual() {
     const summaryPages = document.getElementById('summary-pages');
     if (summaryPages) {
         summaryPages.textContent = `${totalPages} (${pagesCount} inner pages + front and back cover)`;
+        
+        if (window.bookData) {
+            window.bookData.pageCount = pagesCount;
+        }
     }
 }
 
@@ -109,7 +105,9 @@ function saveBookDataToLocalStorage() {
     }
     
     if (pageInput) {
-        window.bookData.pageCount = parseInt(pageInput.value) || 1;
+        const pageCount = parseInt(pageInput.value) || 1;
+        window.bookData.pageCount = pageCount;
+        
         if (isNaN(window.bookData.pageCount) || window.bookData.pageCount < 1) {
             window.bookData.pageCount = 1;
             pageInput.value = 1;

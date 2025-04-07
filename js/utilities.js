@@ -2,7 +2,6 @@
  * Utility functions for the Book Editor
  */
 
-// Global utilities for image handling
 window.BookImageUtils = {
     /**
      * Compresses an image to reduce file size
@@ -19,11 +18,9 @@ window.BookImageUtils = {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
-                        // Calculate dimensions while maintaining aspect ratio
                         let width = img.width;
                         let height = img.height;
                         
-                        // Limit maximum dimensions to prevent memory issues
                         const MAX_DIMENSION = 1500;
                         if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
                             if (width > height) {
@@ -38,26 +35,25 @@ window.BookImageUtils = {
                         canvas.width = width;
                         canvas.height = height;
                         
-                        // Draw and compress
                         ctx.drawImage(img, 0, 0, width, height);
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                         
                         resolve(compressedDataUrl);
                     } catch (err) {
                         console.error('Error during image compression:', err);
-                        resolve(imageDataUrl); // Return original on error
+                        resolve(imageDataUrl);
                     }
                 };
                 
                 img.onerror = function() {
                     console.warn('Failed to load image for compression');
-                    resolve(imageDataUrl); // Return original on error
+                    resolve(imageDataUrl);
                 };
                 
                 img.src = imageDataUrl;
             } catch (err) {
                 console.error('Compression setup error:', err);
-                resolve(imageDataUrl); // Return original on error
+                resolve(imageDataUrl);
             }
         });
     },
@@ -76,15 +72,12 @@ window.BookImageUtils = {
         } catch (error) {
             if (errorCallback) errorCallback(error);
             
-            // Try to store with reduced data if storage limit exceeded
             try {
                 const data = JSON.parse(jsonData);
                 
-                // Check if error is likely due to storage limit
                 if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
                     console.warn('Storage limit reached, trying to reduce image sizes');
                     
-                    // Remove large images as a fallback
                     if (data.coverImage) data.coverImage = '';
                     if (data.backCoverImage) data.backCoverImage = '';
                     
@@ -115,18 +108,119 @@ window.BookImageUtils = {
     isValidImageUrl: function(imageUrl) {
         if (!imageUrl || typeof imageUrl !== 'string') return false;
         
-        // Basic validation
         if (imageUrl.trim() === '') return false;
         
-        // Valid if it's a data URL for an image
         if (imageUrl.startsWith('data:image/')) return true;
         
-        // Valid if it's a URL to an image file
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
         const hasValidExtension = imageExtensions.some(ext => 
             imageUrl.toLowerCase().endsWith(ext)
         );
         
         return hasValidExtension;
+    },
+    
+    /**
+     * Checks if a file exceeds the maximum allowed size
+     * @param {File} file - The file to check
+     * @param {number} maxSizeKB - Maximum size in KB (default: 500KB)
+     * @returns {boolean} - True if file is too large
+     */
+    isFileTooLarge: function(file, maxSizeKB = 500) {
+        if (!file) return false;
+        return file.size > (maxSizeKB * 1024);
+    },
+    
+    /**
+     * Formats file size into human-readable format
+     * @param {number} bytes - Size in bytes
+     * @param {number} decimals - Decimal places
+     * @returns {string} - Formatted size string
+     */
+    formatFileSize: function(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    },
+    
+    /**
+     * Validates if a data URL is within acceptable size limits
+     * @param {string} dataUrl - The data URL to check
+     * @param {number} maxSizeKB - Maximum size in KB
+     * @returns {object} - Result with status and details
+     */
+    validateImageSize: function(dataUrl, maxSizeKB = 500) {
+        if (!dataUrl || typeof dataUrl !== 'string') {
+            return { valid: true, size: 0, formatted: '0 KB' };
+        }
+        
+        const sizeInBytes = Math.ceil(dataUrl.length * 0.75);
+        const sizeInKB = sizeInBytes / 1024;
+        
+        return {
+            valid: sizeInKB <= maxSizeKB,
+            size: sizeInBytes,
+            sizeKB: sizeInKB,
+            formatted: this.formatFileSize(sizeInBytes),
+            maxSize: maxSizeKB
+        };
+    },
+    
+    /**
+     * Auto-optimizes an image to ensure it's within size limits
+     * @param {string} dataUrl - The image data URL
+     * @param {number} maxSizeKB - Maximum size in KB
+     * @returns {Promise<object>} - Optimized image result
+     */
+    autoOptimizeImage: function(dataUrl, maxSizeKB = 500) {
+        return new Promise(async (resolve) => {
+            const initialCheck = this.validateImageSize(dataUrl, maxSizeKB);
+            
+            if (initialCheck.valid) {
+                resolve({
+                    optimized: false,
+                    dataUrl: dataUrl,
+                    ...initialCheck
+                });
+                return;
+            }
+            
+            try {
+                const qualityLevels = [0.7, 0.5, 0.3, 0.2];
+                let optimizedUrl = dataUrl;
+                let finalCheck = initialCheck;
+                
+                for (const quality of qualityLevels) {
+                    optimizedUrl = await this.compressImage(dataUrl, quality);
+                    finalCheck = this.validateImageSize(optimizedUrl, maxSizeKB);
+                    
+                    if (finalCheck.valid) break;
+                }
+                
+                resolve({
+                    optimized: true,
+                    original: {
+                        size: initialCheck.size,
+                        formatted: initialCheck.formatted
+                    },
+                    dataUrl: optimizedUrl,
+                    ...finalCheck
+                });
+            } catch (error) {
+                console.error('Image optimization failed:', error);
+                resolve({
+                    optimized: false,
+                    error: true,
+                    dataUrl: dataUrl,
+                    ...initialCheck
+                });
+            }
+        });
     }
 };

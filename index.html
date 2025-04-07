@@ -9,6 +9,8 @@
     <link href="styles/styles.css" rel="stylesheet">
     <link href="styles/dialog.css" rel="stylesheet">
     <link rel="stylesheet" href="styles/editor.css">
+    <link rel="stylesheet" href="styles/editor-images.css">
+    <script src="js/fallback-utils.js"></script>
     <script>
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -78,7 +80,12 @@
                     
                     <div class="settings-group">
                         <h4>Dimensions</h4>
-                        <div class="modern-row" style="margin-top: 8px;">
+                        <div class="dimension-presets editor-presets">
+                            <button class="preset-btn" data-width="250" data-height="350">Small</button>
+                            <button class="preset-btn" data-width="350" data-height="400">Medium</button>
+                            <button class="preset-btn" data-width="450" data-height="500">Large</button>
+                        </div>
+                        <div class="modern-row" style="margin-top: 12px;">
                             <div class="dimension-control">
                                 <label>W</label>
                                 <input type="text" id="bookWidth" value="300" class="modern-input larger-input">
@@ -87,8 +94,10 @@
                                 <label>H</label>
                                 <input type="text" id="bookHeight" value="400" class="modern-input larger-input">
                             </div>
-                            <button id="applyDimensions" class="modern-button apply-btn">Apply</button>
-                            <button id="resetDimensions" class="modern-button reset-btn">Reset</button>
+                        </div>
+                        <div class="dimension-actions">
+                            <button id="applyDimensions" class="modern-button apply-btn"><i class="ri-check-line"></i> Apply</button>
+                            <button id="resetDimensions" class="modern-button reset-btn"><i class="ri-refresh-line"></i> Reset</button>
                         </div>
                     </div>
                 </div>
@@ -258,12 +267,12 @@
     <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
     <script src="js/notifications/notifications.js"></script>
-    <script src="js/editor.js"></script>
-    <script src="js/book.js"></script>
-    <script src="js/utilities.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/preview.js"></script>
     <script src="js/ui-tabs.js"></script>
+    <script src="js/book.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/preview.js"></script>
+    <script src="js/diagnostics.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/panel-toggle.js"></script>
     <script src="js/panel-resize.js"></script>
     <script src="js/constants.js"></script>

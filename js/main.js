@@ -468,11 +468,6 @@ function attachEventListeners() {
                                     pageBgImage.textContent = file.name;
                                 }
                                 
-                                const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-                                if (backgroundColorGroup) {
-                                    backgroundColorGroup.style.display = "none";
-                                }
-                                
                                 updateFlipBook();
                                 updateRemoveImageButtonState();
                                 updateSaveButtonState();
@@ -616,7 +611,45 @@ function attachEventListeners() {
                 document.getElementById(targetTab).classList.add('active');
             });
         });
+
+        const showColorBtn = document.getElementById('show-color-preview');
+        const showImageBtn = document.getElementById('show-image-preview');
         
+        if (showColorBtn && showImageBtn) {
+            showColorBtn.addEventListener('click', function() {
+                showColorBtn.classList.add('active');
+                showImageBtn.classList.remove('active');
+                
+                const pageElements = document.querySelectorAll('.page');
+                pageElements.forEach(page => {
+                    const index = parseInt(page.getAttribute('data-page-index') || page.getAttribute('data-index'));
+                    if (index === currentPageIndex) {
+                        page.style.backgroundImage = '';
+                        
+                        const currentPage = pages[currentPageIndex];
+                        if (currentPage) {
+                            page.style.backgroundColor = currentPage.backgroundColor || '#FFFFFF';
+                        }
+                    }
+                });
+            });
+            
+            showImageBtn.addEventListener('click', function() {
+                showColorBtn.classList.remove('active');
+                showImageBtn.classList.add('active');
+                
+                const pageElements = document.querySelectorAll('.page');
+                pageElements.forEach(page => {
+                    const index = parseInt(page.getAttribute('data-page-index') || page.getAttribute('data-index'));
+                    if (index === currentPageIndex) {
+                        const currentPage = pages[currentPageIndex];
+                        if (currentPage && currentPage.backgroundImage) {
+                            page.style.backgroundImage = `url(${currentPage.backgroundImage})`;
+                        }
+                    }
+                });
+            });
+        }
     } catch (error) {
         console.error("Error in attachEventListeners:", error);
         if (window.notifications && typeof window.notifications.error === 'function') {
@@ -834,20 +867,12 @@ function updateBackgroundImagePreview() {
                 : 'Image';
             pageBgImage.textContent = filename;
         }
-        
-        if (backgroundColorGroup) {
-            backgroundColorGroup.style.display = "none";
-        }
     } else {
         imagePreview.style.backgroundImage = '';
         imagePreview.style.display = "none";
         
         if (pageBgImage) {
             pageBgImage.textContent = "No image selected";
-        }
-        
-        if (backgroundColorGroup) {
-            backgroundColorGroup.style.display = "block";
         }
     }
     
@@ -1208,11 +1233,6 @@ function removeBackgroundImage() {
     const pageBgImage = document.getElementById('pageBgImage');
     if (pageBgImage) {
         pageBgImage.textContent = "No image selected";
-    }
-    
-    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-    if (backgroundColorGroup) {
-        backgroundColorGroup.style.display = "block";
     }
     
     updateFlipBook();

@@ -95,11 +95,6 @@ function enhanceUIComponents() {
                     imagePreview.style.backgroundImage = `url(${e.target.result})`;
                     updateImagePreviewVisibility();
                     
-                    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-                    if (backgroundColorGroup) {
-                        backgroundColorGroup.style.display = "none";
-                    }
-                    
                     updateRemoveImageButtonState();
                 };
                 
@@ -111,18 +106,8 @@ function enhanceUIComponents() {
     function updateImagePreviewVisibility() {
         if (imagePreview.style.backgroundImage && imagePreview.style.backgroundImage !== 'none') {
             noImageMessage.style.display = 'none';
-            
-            const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-            if (backgroundColorGroup) {
-                backgroundColorGroup.style.display = "none";
-            }
         } else {
             noImageMessage.style.display = 'block';
-            
-            const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-            if (backgroundColorGroup) {
-                backgroundColorGroup.style.display = "block";
-            }
         }
         
         updateRemoveImageButtonState();

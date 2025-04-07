@@ -28,6 +28,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (!window.bookData) window.bookData = {};
                             window.bookData.pageCount = pageCount;
                             
+                            // Ensure cover image settings are preserved
+                            if (window.bookData.coverImage && !window.bookData.hasOwnProperty('coverImageEnabled')) {
+                                window.bookData.coverImageEnabled = true;
+                            }
+                            
+                            // Ensure back cover image settings are preserved
+                            if (window.bookData.backCoverImage && !window.bookData.hasOwnProperty('backCoverImageEnabled')) {
+                                window.bookData.backCoverImageEnabled = true;
+                            }
+                            
                             // Update the page icons
                             window.updatePagesVisual();
                             
@@ -38,20 +48,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                     } catch (e) {
-                        console.error("Error updating pages visual:", e);
+                        console.error("Error in forceUpdatePagesVisual:", e);
                     }
                 }
             })();
         `;
-        
-        // Remove any previously added script
-        const oldScript = document.getElementById('update-pages-script');
-        if (oldScript) {
-            oldScript.remove();
-        }
-        
-        script.id = 'update-pages-script';
-        document.head.appendChild(script);
+        document.body.appendChild(script);
+        setTimeout(() => {
+            document.body.removeChild(script);
+        }, 100);
     }
     
     const observer = new MutationObserver(function(mutations) {

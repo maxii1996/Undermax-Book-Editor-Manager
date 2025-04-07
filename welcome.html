@@ -116,8 +116,8 @@
                         
                         <div class="cover-options">
                             <div class="cover-option">
-                                <input type="radio" name="cover-type" id="cover-color" checked>
-                                <label for="cover-color">Solid Color</label>
+                                <input type="hidden" name="cover-type" id="cover-color" value="true" checked>
+                                <label>Solid Color (Required)</label>
                                 
                                 <div class="color-picker-container">
                                     <div class="color-picker-wrapper">
@@ -132,8 +132,8 @@
                             </div>
                             
                             <div class="cover-option">
-                                <input type="radio" name="cover-type" id="cover-image">
-                                <label for="cover-image">Background Image</label>
+                                <input type="checkbox" name="cover-image-enabled" id="cover-image">
+                                <label for="cover-image">Background Image (Optional)</label>
                                 
                                 <div class="image-upload-container">
                                     <button class="image-upload-btn" id="cover-image-btn">
@@ -187,8 +187,8 @@
                         
                         <div class="cover-options">
                             <div class="cover-option">
-                                <input type="radio" name="back-cover-type" id="back-cover-color" checked>
-                                <label for="back-cover-color">Solid Color</label>
+                                <input type="hidden" name="back-cover-type" id="back-cover-color" value="true" checked>
+                                <label>Solid Color (Required)</label>
                                 
                                 <div class="color-picker-container">
                                     <div class="color-picker-wrapper">
@@ -203,8 +203,8 @@
                             </div>
                             
                             <div class="cover-option">
-                                <input type="radio" name="back-cover-type" id="back-cover-image">
-                                <label for="back-cover-image">Background Image</label>
+                                <input type="checkbox" name="back-cover-image-enabled" id="back-cover-image">
+                                <label for="back-cover-image">Background Image (Optional)</label>
                                 
                                 <div class="image-upload-container">
                                     <button class="image-upload-btn" id="back-cover-image-btn">

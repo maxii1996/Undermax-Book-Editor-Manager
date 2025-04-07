@@ -650,3 +650,23 @@ body.resizing #right-panel,
 body.resizing #middle-panel {
     transition: none;
 }
+
+.preview-toggle-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.preview-toggle-buttons .modern-button {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+}
+
+.preview-toggle-buttons .modern-button.active {
+    background: linear-gradient(to bottom, #0078D7, #006CC1);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 120, 215, 0.4);
+}

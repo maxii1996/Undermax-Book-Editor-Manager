@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
         coverIcon.className = 'page-item cover';
         coverIcon.textContent = 'FRONT';
 
-        if (window.bookData && window.bookData.coverType === 'image' && window.bookData.coverImage) {
+        if (window.bookData && window.bookData.coverImageEnabled && window.bookData.coverImage) {
             coverIcon.style.backgroundImage = `url(${window.bookData.coverImage})`;
             coverIcon.style.backgroundColor = 'transparent';
             coverIcon.style.transform = 'none';
@@ -511,8 +511,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const backIcon = document.createElement('div');
         backIcon.className = 'page-item back';
         backIcon.textContent = 'BACK';
-
-        if (window.bookData && window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) {
+        
+        if (window.bookData && window.bookData.backCoverImageEnabled && window.bookData.backCoverImage) {
             backIcon.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
             backIcon.style.backgroundColor = 'transparent';
             backIcon.style.transform = 'none';
@@ -843,9 +843,17 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const totalPages = innerPages + 2;
 
-        document.getElementById('summary-name').textContent = window.bookData.bookName || 'Untitled Book';
-        document.getElementById('summary-dimensions').textContent =
-            `${window.bookData.width || 350}px × ${window.bookData.height || 400}px`;
+        const bookNameInput = document.getElementById('wizard-book-name');
+        const bookName = bookNameInput ? bookNameInput.value.trim() : (window.bookData.name || window.bookData.bookName || 'Untitled Book');
+        document.getElementById('summary-name').textContent = bookName;
+        
+        const widthInput = document.getElementById('wizard-book-width');
+        const heightInput = document.getElementById('wizard-book-height');
+        
+        const width = widthInput ? parseInt(widthInput.value) || 350 : (window.bookData.width || window.bookData.bookWidth || 350);
+        const height = heightInput ? parseInt(heightInput.value) || 400 : (window.bookData.height || window.bookData.bookHeight || 400);
+        
+        document.getElementById('summary-dimensions').textContent = `${width}px × ${height}px`;
 
         document.getElementById('summary-pages').textContent = 
             `${totalPages} (Front Cover + ${innerPages} inner pages + Back Cover)`;
@@ -870,5 +878,95 @@ document.addEventListener('DOMContentLoaded', function () {
         wizardSteps.forEach(function(step) {
             observer.observe(step, { attributes: true });
         });
+    });
+
+    document.getElementById('cover-image').addEventListener('change', function() {
+        if (!window.bookData) {
+            window.bookData = {};
+        }
+        window.bookData.coverImageEnabled = this.checked;
+        
+        const coverImageRemoveBtn = document.getElementById('cover-image-remove-btn');
+        if (coverImageRemoveBtn) {
+            coverImageRemoveBtn.style.display = this.checked && window.bookData.coverImage ? 'block' : 'none';
+        }
+        
+        const frontElement = document.querySelector('.book-preview-3d .front');
+        if (frontElement) {
+            frontElement.style.backgroundColor = window.bookData.coverColor || '#DC143C';
+            if (this.checked && window.bookData.coverImage) {
+                frontElement.style.backgroundImage = `url(${window.bookData.coverImage})`;
+            } else {
+                frontElement.style.backgroundImage = '';
+            }
+        }
+        
+        document.querySelectorAll('.front-preview .book-cover').forEach(cover => {
+            cover.style.backgroundColor = window.bookData.coverColor || '#DC143C';
+            if (this.checked && window.bookData.coverImage) {
+                cover.style.backgroundImage = `url(${window.bookData.coverImage})`;
+            } else {
+                cover.style.backgroundImage = '';
+            }
+        });
+        
+        const coverPage = document.querySelector('.pages-visual .cover');
+        if (coverPage) {
+            coverPage.style.backgroundColor = window.bookData.coverColor || '#DC143C';
+            if (this.checked && window.bookData.coverImage) {
+                coverPage.style.backgroundImage = `url(${window.bookData.coverImage})`;
+            } else {
+                coverPage.style.backgroundImage = '';
+            }
+        }
+        
+        if (typeof saveBookDataToLocalStorage === 'function') {
+            saveBookDataToLocalStorage();
+        }
+    });
+
+    document.getElementById('back-cover-image')?.addEventListener('change', function() {
+        if (!window.bookData) {
+            window.bookData = {};
+        }
+        window.bookData.backCoverImageEnabled = this.checked;
+        
+        const backCoverImageRemoveBtn = document.getElementById('back-cover-image-remove-btn');
+        if (backCoverImageRemoveBtn) {
+            backCoverImageRemoveBtn.style.display = this.checked && window.bookData.backCoverImage ? 'block' : 'none';
+        }
+        
+        const backElement = document.querySelector('.book-preview-3d .back');
+        if (backElement) {
+            backElement.style.backgroundColor = window.bookData.backCoverColor || '#DC143C';
+            if (this.checked && window.bookData.backCoverImage) {
+                backElement.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
+            } else {
+                backElement.style.backgroundImage = '';
+            }
+        }
+        
+        document.querySelectorAll('.back-preview .book-cover').forEach(cover => {
+            cover.style.backgroundColor = window.bookData.backCoverColor || '#DC143C';
+            if (this.checked && window.bookData.backCoverImage) {
+                cover.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
+            } else {
+                cover.style.backgroundImage = '';
+            }
+        });
+        
+        const backPage = document.querySelector('.pages-visual .back');
+        if (backPage) {
+            backPage.style.backgroundColor = window.bookData.backCoverColor || '#DC143C';
+            if (this.checked && window.bookData.backCoverImage) {
+                backPage.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
+            } else {
+                backPage.style.backgroundImage = '';
+            }
+        }
+        
+        if (typeof saveBookDataToLocalStorage === 'function') {
+            saveBookDataToLocalStorage();
+        }
     });
 });

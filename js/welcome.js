@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
         coverType: 'color',
         coverColor: '#DC143C',
         coverImage: '',
+        coverImageEnabled: false,
         backCoverType: 'color',
         backCoverColor: '#DC143C',
         backCoverImage: '',
+        backCoverImageEnabled: false,
         pageCount: 2
     };
 
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('cover-image').addEventListener('change', function () {
-        bookData.coverType = 'image';
+        bookData.coverImageEnabled = this.checked;
         updateCoverPreview();
         updateCoverRemoveButtonVisibility();
         updateNextButtonState();
@@ -112,32 +114,32 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateCoverPreview() {
         const frontCovers = document.querySelectorAll('.front-preview .book-cover');
         frontCovers.forEach(cover => {
-            if (bookData.coverType === 'color') {
-                cover.style.backgroundColor = bookData.coverColor;
-                cover.style.backgroundImage = '';
-            } else if (bookData.coverType === 'image' && bookData.coverImage) {
+            cover.style.backgroundColor = bookData.coverColor || '#DC143C';
+            if (bookData.coverImageEnabled && bookData.coverImage) {
                 cover.style.backgroundImage = `url(${bookData.coverImage})`;
-                cover.style.backgroundColor = 'transparent';
+            } else {
+                cover.style.backgroundImage = '';
             }
         });
 
         const frontFace = document.querySelector('.book-preview-3d .front');
         if (frontFace) {
-            if (bookData.coverType === 'color') {
-                frontFace.style.backgroundColor = bookData.coverColor;
-                frontFace.style.backgroundImage = '';
-            } else if (bookData.coverType === 'image' && bookData.coverImage) {
+            frontFace.style.backgroundColor = bookData.coverColor || '#DC143C';
+            if (bookData.coverImageEnabled && bookData.coverImage) {
                 frontFace.style.backgroundImage = `url(${bookData.coverImage})`;
-                frontFace.style.backgroundColor = 'transparent';
+            } else {
+                frontFace.style.backgroundImage = '';
             }
         }
 
         const coverPage = document.querySelector('.pages-visual .cover');
         if (coverPage) {
-            coverPage.style.backgroundColor = bookData.coverType === 'color' ?
-                bookData.coverColor : 'transparent';
-            coverPage.style.backgroundImage = bookData.coverType === 'image' && bookData.coverImage ?
-                `url(${bookData.coverImage})` : '';
+            coverPage.style.backgroundColor = bookData.coverColor || '#DC143C';
+            if (bookData.coverImageEnabled && bookData.coverImage) {
+                coverPage.style.backgroundImage = `url(${bookData.coverImage})`;
+            } else {
+                coverPage.style.backgroundImage = '';
+            }
         }
     }
 
@@ -222,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             coverImageName.textContent = file.name;
             document.getElementById('cover-image').checked = true;
-            bookData.coverType = 'image';
+            bookData.coverImageEnabled = true;
 
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -242,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bookData.coverImage = '';
         coverImageName.textContent = 'No image selected';
         document.getElementById('cover-color').checked = true;
-        bookData.coverType = 'color';
+        bookData.coverImageEnabled = false;
 
         const radioEvent = new Event('change');
         document.getElementById('cover-color').dispatchEvent(radioEvent);
@@ -262,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function updateCoverRemoveButtonVisibility() {
-        if (bookData.coverType === 'image' && bookData.coverImage) {
+        if (bookData.coverImageEnabled && bookData.coverImage) {
             coverImageRemoveBtn.style.display = 'inline-flex';
         } else {
             coverImageRemoveBtn.style.display = 'none';
@@ -289,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('back-cover-image').addEventListener('change', function () {
-        bookData.backCoverType = 'image';
+        bookData.backCoverImageEnabled = this.checked;
         updateBackCoverPreview();
         updateBackCoverRemoveButtonVisibility();
         updateNextButtonState();
@@ -298,32 +300,32 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateBackCoverPreview() {
         const backCovers = document.querySelectorAll('.back-preview .book-cover');
         backCovers.forEach(cover => {
-            if (bookData.backCoverType === 'color') {
-                cover.style.backgroundColor = bookData.backCoverColor;
-                cover.style.backgroundImage = '';
-            } else if (bookData.backCoverType === 'image' && bookData.backCoverImage) {
+            cover.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
                 cover.style.backgroundImage = `url(${bookData.backCoverImage})`;
-                cover.style.backgroundColor = 'transparent';
+            } else {
+                cover.style.backgroundImage = '';
             }
         });
 
         const backFace = document.querySelector('.book-preview-3d .back');
         if (backFace) {
-            if (bookData.backCoverType === 'color') {
-                backFace.style.backgroundColor = bookData.backCoverColor;
-                backFace.style.backgroundImage = '';
-            } else if (bookData.backCoverType === 'image' && bookData.backCoverImage) {
+            backFace.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
                 backFace.style.backgroundImage = `url(${bookData.backCoverImage})`;
-                backFace.style.backgroundColor = 'transparent';
+            } else {
+                backFace.style.backgroundImage = '';
             }
         }
 
         const backPage = document.querySelector('.pages-visual .back');
         if (backPage) {
-            backPage.style.backgroundColor = bookData.backCoverType === 'color' ?
-                bookData.backCoverColor : 'transparent';
-            backPage.style.backgroundImage = bookData.backCoverType === 'image' && bookData.backCoverImage ?
-                `url(${bookData.backCoverImage})` : '';
+            backPage.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
+                backPage.style.backgroundImage = `url(${bookData.backCoverImage})`;
+            } else {
+                backPage.style.backgroundImage = '';
+            }
         }
     }
 
@@ -421,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             backCoverImageName.textContent = file.name;
             document.getElementById('back-cover-image').checked = true;
-            bookData.backCoverType = 'image';
+            bookData.backCoverImageEnabled = true;
 
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -441,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bookData.backCoverImage = '';
         backCoverImageName.textContent = 'No image selected';
         document.getElementById('back-cover-color').checked = true;
-        bookData.backCoverType = 'color';
+        bookData.backCoverImageEnabled = false;
 
         const radioEvent = new Event('change');
         document.getElementById('back-cover-color').dispatchEvent(radioEvent);
@@ -461,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function updateBackCoverRemoveButtonVisibility() {
-        if (bookData.backCoverType === 'image' && bookData.backCoverImage) {
+        if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
             backCoverImageRemoveBtn.style.display = 'inline-flex';
         } else {
             backCoverImageRemoveBtn.style.display = 'none';
@@ -490,10 +492,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const coverIcon = document.createElement('div');
         coverIcon.className = 'page-item cover';
         coverIcon.textContent = 'FRONT';
-        if (bookData.coverType === 'color') {
-            coverIcon.style.backgroundColor = bookData.coverColor;
-        } else if (bookData.coverType === 'image' && bookData.coverImage) {
+        
+        // Prioritize background image over solid color for front cover
+        if (bookData.coverImageEnabled && bookData.coverImage) {
             coverIcon.style.backgroundImage = `url(${bookData.coverImage})`;
+            coverIcon.style.backgroundColor = 'transparent'; // Make background transparent when image is present
+            coverIcon.style.transform = 'none'; // Ensure proper scaling
+        } else {
+            coverIcon.style.backgroundColor = bookData.coverColor || '#DC143C';
+            coverIcon.style.backgroundImage = '';
         }
         container.appendChild(coverIcon);
 
@@ -505,15 +512,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(pageItem);
             }
         } else {
+            // Show first two pages
+            for (let i = 1; i <= 2; i++) {
+                const pageItem = document.createElement('div');
+                pageItem.className = 'page-item';
+                pageItem.textContent = i;
+                container.appendChild(pageItem);
+            }
+            
+            // Add ellipsis
+            const ellipsis = document.createElement('div');
+            ellipsis.className = 'page-item ellipsis';
+            ellipsis.innerHTML = '&hellip;';
+            container.appendChild(ellipsis);
+            
+            // Show last two pages
+            for (let i = count - 1; i <= count; i++) {
+                const pageItem = document.createElement('div');
+                pageItem.className = 'page-item';
+                pageItem.textContent = i;
+                container.appendChild(pageItem);
+            }
         }
 
         const backIcon = document.createElement('div');
         backIcon.className = 'page-item back';
         backIcon.textContent = 'BACK';
-        if (bookData.backCoverType === 'color') {
-            backIcon.style.backgroundColor = bookData.backCoverColor;
-        } else if (bookData.backCoverType === 'image' && bookData.backCoverImage) {
+        
+        // Prioritize background image over solid color for back cover
+        if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
             backIcon.style.backgroundImage = `url(${bookData.backCoverImage})`;
+            backIcon.style.backgroundColor = 'transparent'; // Make background transparent when image is present
+            backIcon.style.transform = 'none'; // Ensure proper scaling
+        } else {
+            backIcon.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            backIcon.style.backgroundImage = '';
         }
         container.appendChild(backIcon);
     }
@@ -617,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (currentStep === 3) {
             const frontCoverType = document.querySelector('input[name="cover-type"]:checked')?.value;
-            const isFrontCoverImage = frontCoverType === 'image' || document.getElementById('cover-image')?.checked;
+            const isFrontCoverImage = bookData.coverImageEnabled;
             
             if (isFrontCoverImage) {
                 nextButton.disabled = !frontCoverImageValid || !bookData.coverImage;
@@ -626,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } else if (currentStep === 4) {
             const backCoverType = document.querySelector('input[name="back-cover-type"]:checked')?.value;
-            const isBackCoverImage = backCoverType === 'image' || document.getElementById('back-cover-image')?.checked;
+            const isBackCoverImage = bookData.backCoverImageEnabled;
             
             if (isBackCoverImage) {
                 nextButton.disabled = !backCoverImageValid || !bookData.backCoverImage;
@@ -662,8 +695,8 @@ document.addEventListener('DOMContentLoaded', function () {
             name: "Front Cover",
             width: bookData.width,
             height: bookData.height,
-            backgroundColor: bookData.coverType === 'color' ? bookData.coverColor : 'transparent',
-            backgroundImage: bookData.coverType === 'image' ? bookData.coverImage : '',
+            backgroundColor: bookData.coverColor,
+            backgroundImage: bookData.coverImageEnabled ? bookData.coverImage : '',
             alignment: "",
             contentHtml: "<p>Your Book Title</p>"
         });
@@ -685,8 +718,8 @@ document.addEventListener('DOMContentLoaded', function () {
             name: "Back Cover",
             width: bookData.width,
             height: bookData.height,
-            backgroundColor: bookData.backCoverType === 'color' ? bookData.backCoverColor : 'transparent',
-            backgroundImage: bookData.backCoverType === 'image' ? bookData.backCoverImage : '',
+            backgroundColor: bookData.backCoverColor,
+            backgroundImage: bookData.backCoverImageEnabled ? bookData.backCoverImage : '',
             alignment: "",
             contentHtml: "<p>The End</p>"
         });
@@ -696,10 +729,10 @@ document.addEventListener('DOMContentLoaded', function () {
             bookWidth: bookData.width,
             bookHeight: bookData.height,
             coverColor: bookData.coverColor,
-            coverType: bookData.coverType,
+            coverImageEnabled: bookData.coverImageEnabled,
             coverImage: bookData.coverImage,
             backCoverColor: bookData.backCoverColor,
-            backCoverType: bookData.backCoverType,
+            backCoverImageEnabled: bookData.backCoverImageEnabled,
             backCoverImage: bookData.backCoverImage,
             pages: pages
         }));
@@ -878,7 +911,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 radio.closest('.cover-option')?.classList.remove('selected');
             });
             this.closest('.cover-option')?.classList.add('selected');
-            bookData.coverType = 'image';
+            bookData.coverImageEnabled = this.checked;
             updateCoverRemoveButtonVisibility();
             updateNextButtonState();
         });
@@ -898,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 radio.closest('.cover-option')?.classList.remove('selected');
             });
             this.closest('.cover-option')?.classList.add('selected');
-            bookData.backCoverType = 'image';
+            bookData.backCoverImageEnabled = this.checked;
             updateBackCoverRemoveButtonVisibility();
             updateNextButtonState();
         });
@@ -966,11 +999,11 @@ function createBookFromWizard() {
     
     console.log(`Creating book with ${pagesCount} internal pages (+ front and back cover)`);
     
-    const coverType = document.getElementById('cover-color').checked ? 'color' : 'image';
+    const coverImageEnabled = bookData.coverImageEnabled || false;
     const coverColor = document.getElementById('wizard-cover-color').value || '#DC143C';
     const coverImage = coverImageData || '';
     
-    const backCoverType = document.getElementById('back-cover-color').checked ? 'color' : 'image';
+    const backCoverImageEnabled = bookData.backCoverImageEnabled || false;
     const backCoverColor = document.getElementById('wizard-back-cover-color').value || '#DC143C';
     const backCoverImage = backCoverImageData || '';
 
@@ -980,8 +1013,8 @@ function createBookFromWizard() {
         name: "Cover",
         width: bookWidth,
         height: bookHeight,
-        backgroundColor: coverType === 'color' ? coverColor : 'transparent',
-        backgroundImage: coverType === 'image' ? coverImage : '',
+        backgroundColor: coverColor,
+        backgroundImage: coverImageEnabled ? coverImage : '',
         alignment: "center",
         contentHtml: "<p>Your Book Title</p>"
     });
@@ -1002,8 +1035,8 @@ function createBookFromWizard() {
         name: "Back Cover",
         width: bookWidth,
         height: bookHeight,
-        backgroundColor: backCoverType === 'color' ? backCoverColor : 'transparent',
-        backgroundImage: backCoverType === 'image' ? backCoverImage : '',
+        backgroundColor: backCoverColor,
+        backgroundImage: backCoverImageEnabled ? backCoverImage : '',
         alignment: "center",
         contentHtml: ""
     });
@@ -1029,9 +1062,9 @@ function createBookFromWizard() {
         bookHeight: bookHeight,
         coverColor: coverColor,
         backCoverColor: backCoverColor,
-        coverType: coverType,
+        coverImageEnabled: coverImageEnabled,
         coverImage: coverImage,
-        backCoverType: backCoverType,
+        backCoverImageEnabled: backCoverImageEnabled,
         backCoverImage: backCoverImage,
         pageCount: pagesCount,
         pages: pages

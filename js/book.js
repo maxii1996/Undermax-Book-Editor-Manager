@@ -596,11 +596,6 @@ function handleImageUpload(event) {
                 }
 
                 requestAnimationFrame(() => {
-                    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-                    if (backgroundColorGroup) {
-                        backgroundColorGroup.style.display = "none";
-                    }
-
                     updateRemoveImageButtonState();
                     updateFlipBook();
                 });
@@ -662,34 +657,6 @@ function removeBackgroundImage() {
             imagePreview.style.display = "none";
         }
 
-        const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
-        if (backgroundColorGroup) {
-            backgroundColorGroup.style.display = "block";
-        }
-
-        const pageElements = document.querySelectorAll('.page');
-        if (pageElements && pageElements.length > 0) {
-            pageElements.forEach(page => {
-                if (parseInt(page.getAttribute('data-index')) === currentPageIndex) {
-                    page.style.backgroundImage = '';
-                    page.removeAttribute('data-bg-image');
-                    page.classList.remove('has-bg-image');
-                }
-            });
-        }
-
-        const book = document.getElementById('book');
-        if (book) {
-            const bookPages = book.querySelectorAll('.page');
-            bookPages.forEach(page => {
-                if (parseInt(page.getAttribute('data-index')) === currentPageIndex) {
-                    page.style.backgroundImage = '';
-                    page.removeAttribute('data-bg-image');
-                    page.classList.remove('has-bg-image');
-                }
-            });
-        }
-
         applyBackgroundColor();
         
         saveEditorChanges();
@@ -737,6 +704,47 @@ function updateRemoveImageButtonState() {
     }
 }
 
+function setupPreviewToggleButtons() {
+    const showColorBtn = document.getElementById('show-color-preview');
+    const showImageBtn = document.getElementById('show-image-preview');
+    
+    if (!showColorBtn || !showImageBtn) return;
+    
+    showColorBtn.addEventListener('click', function() {
+        showColorBtn.classList.add('active');
+        showImageBtn.classList.remove('active');
+        
+        const pageElements = document.querySelectorAll('.page');
+        pageElements.forEach(page => {
+            const index = parseInt(page.getAttribute('data-page-index') || page.getAttribute('data-index'));
+            if (index === currentPageIndex) {
+                page.style.backgroundImage = '';
+                
+                const currentPage = pages[currentPageIndex];
+                if (currentPage) {
+                    page.style.backgroundColor = currentPage.backgroundColor || '#FFFFFF';
+                }
+            }
+        });
+    });
+    
+    showImageBtn.addEventListener('click', function() {
+        showColorBtn.classList.remove('active');
+        showImageBtn.classList.add('active');
+        
+        const pageElements = document.querySelectorAll('.page');
+        pageElements.forEach(page => {
+            const index = parseInt(page.getAttribute('data-page-index') || page.getAttribute('data-index'));
+            if (index === currentPageIndex) {
+                const currentPage = pages[currentPageIndex];
+                if (currentPage && currentPage.backgroundImage) {
+                    page.style.backgroundImage = `url(${currentPage.backgroundImage})`;
+                }
+            }
+        });
+    });
+}
+
 function loadPageIntoEditor(index) {
     currentPageIndex = index;
 
@@ -746,7 +754,6 @@ function loadPageIntoEditor(index) {
     const pageBgImageEl = document.getElementById("pageBgImage");
     const bookSettingsGroup = document.getElementById("book-settings-group");
     const pageBgTitle = document.getElementById("page-bg-title");
-    const backgroundColorGroup = document.querySelector('.settings-group:has(#pageBgColor)');
 
     if (bookWidthEl) bookWidthEl.value = bookData.bookWidth;
     if (bookHeightEl) bookHeightEl.value = bookData.bookHeight;
@@ -761,7 +768,7 @@ function loadPageIntoEditor(index) {
 
     if (pageBgTitle) {
         if (index === 0) {
-            pageBgTitle.textContent = "Cover Background Color";
+            pageBgTitle.textContent = "Front Cover Background Color";
         } else if (index === pages.length - 1) {
             pageBgTitle.textContent = "Back Cover Background Color";
         } else {
@@ -806,10 +813,6 @@ function loadPageIntoEditor(index) {
                 imagePreview.innerHTML = '';
             }
             
-            if (backgroundColorGroup) {
-                backgroundColorGroup.style.display = "none";
-            }
-            
             updateRemoveImageButtonState();
         } catch (e) {
             console.error("Error loading background image:", e);
@@ -822,10 +825,6 @@ function loadPageIntoEditor(index) {
                 imagePreview.style.backgroundImage = '';
                 imagePreview.style.display = "none";
             }
-            
-            if (backgroundColorGroup) {
-                backgroundColorGroup.style.display = "block";
-            }
         }
     } else {
         if (pageBgImageEl) pageBgImageEl.textContent = "No image selected";
@@ -834,10 +833,6 @@ function loadPageIntoEditor(index) {
         if (imagePreview) {
             imagePreview.style.backgroundImage = '';
             imagePreview.style.display = "none";
-        }
-        
-        if (backgroundColorGroup) {
-            backgroundColorGroup.style.display = "block";
         }
     }
 
@@ -851,6 +846,36 @@ function loadPageIntoEditor(index) {
     updateInfoBar();
     updateRemoveImageButtonState();
     updateFlipBook();
+
+    setupPreviewToggleButtons();
+
+    const showColorBtn = document.getElementById('show-color-preview');
+    const showImageBtn = document.getElementById('show-image-preview');
+    
+    if (showColorBtn && showImageBtn) {
+        if (p.backgroundImage) {
+            const pageElements = document.querySelectorAll('.page');
+            let hasVisibleImage = false;
+            
+            pageElements.forEach(page => {
+                const pageIndex = parseInt(page.getAttribute('data-page-index') || page.getAttribute('data-index'));
+                if (pageIndex === currentPageIndex && page.style.backgroundImage && page.style.backgroundImage !== 'none') {
+                    hasVisibleImage = true;
+                }
+            });
+            
+            if (hasVisibleImage) {
+                showColorBtn.classList.remove('active');
+                showImageBtn.classList.add('active');
+            } else {
+                showColorBtn.classList.add('active');
+                showImageBtn.classList.remove('active');
+            }
+        } else {
+            showColorBtn.classList.add('active');
+            showImageBtn.classList.remove('active');
+        }
+    }
 }
 
 function goPrev() {

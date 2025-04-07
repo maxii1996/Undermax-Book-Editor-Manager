@@ -16,7 +16,8 @@ function updatePagesVisual() {
     coverIcon.className = 'page-item cover';
     coverIcon.textContent = 'FRONT';
     
-    if (window.bookData && window.bookData.coverType === 'image' && window.bookData.coverImage) {
+    // Always prioritize background image if available
+    if (window.bookData && window.bookData.coverImageEnabled && window.bookData.coverImage) {
         coverIcon.style.backgroundImage = `url(${window.bookData.coverImage})`;
         coverIcon.style.backgroundColor = 'transparent';
         coverIcon.style.transform = 'none';
@@ -59,7 +60,8 @@ function updatePagesVisual() {
     backIcon.className = 'page-item back';
     backIcon.textContent = 'BACK';
     
-    if (window.bookData && window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) {
+    // Always prioritize background image if available
+    if (window.bookData && window.bookData.backCoverImageEnabled && window.bookData.backCoverImage) {
         backIcon.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
         backIcon.style.backgroundColor = 'transparent';
         backIcon.style.transform = 'none';

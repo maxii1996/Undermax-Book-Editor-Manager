@@ -1089,7 +1089,7 @@ function validateBookImages() {
                     });
                 }
             };
-            console.warn("BookImageUtils not found, using fallback implementation");
+          //  console.warn("BookImageUtils not found, using fallback implementation");
         }
         
         async function processPage(index) {

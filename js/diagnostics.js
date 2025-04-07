@@ -119,7 +119,7 @@ const BookDiagnostics = {
                     console.log("Book data repaired and saved");
                     return true;
                 } else {
-                    console.error("Could not repair book data:", validation.issues);
+                    //console.error("Could not repair book data:", validation.issues);
                     return false;
                 }
             }

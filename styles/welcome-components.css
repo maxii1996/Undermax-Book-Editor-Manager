@@ -595,18 +595,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transform: perspective(800px) rotateY(5deg);
     transition: all 0.5s ease;
-}
-
-.wizard-step-preview:hover {
-    transform: perspective(800px) rotateY(0);
 }
 
 .dual-preview-container {
     display: flex;
     gap: 80px;
-    perspective: 1000px;
     width: 100%;
     justify-content: center;
     min-height: 240px;
@@ -865,9 +859,7 @@
     position: relative;
     padding: 15px;
     border-radius: 8px;
-    margin-bottom: 15px;
     background: rgba(45, 45, 48, 0.7);
-    border: 1px solid #3E3E42;
     transition: all 0.2s ease;
     cursor: pointer;
 }
@@ -877,9 +869,12 @@
 }
 
 .cover-option.selected {
-    background: rgba(0, 120, 215, 0.1);
-    border-color: #0078D7;
-    box-shadow: 0 0 0 1px rgba(0, 120, 215, 0.3);
+    position: relative;
+    padding: 15px;
+    border-radius: 8px;
+    background: rgba(45, 45, 48, 0.7);
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .cover-option input[type="radio"] {
@@ -945,6 +940,22 @@
 .cover-option input[type="radio"]:checked+label::after {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+/* Remove radio button appearance for required options */
+.cover-option.required-option label {
+    padding-left: 0;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.cover-option.required-option label::before,
+.cover-option.required-option label::after {
+    display: none;
+}
+
+.cover-option.required-option .color-picker-container {
+    margin-left: 0;
 }
 
 .preview-controls {
@@ -1095,4 +1106,95 @@
 
 .image-remove-btn i {
     font-size: 16px;
+}
+
+.cover-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cover-option input[type="checkbox"] + label {
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #E0E0E0;
+    font-weight: 500;
+}
+
+.cover-option input[type="checkbox"] + label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #555;
+    border-radius: 4px;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.cover-option input[type="checkbox"]:checked + label::before {
+    background: rgba(0, 120, 215, 0.1);
+    border-color: #0078D7;
+}
+
+.cover-option input[type="checkbox"] + label::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cover-option input[type="checkbox"]:checked + label::after {
+    content: '';
+    opacity: 1;
+    width: 20px;
+    height: 20px;
+    background: #0078D7;
+    transform: translate(-50%, -50%) scale(1);
+    border-radius: 4px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+    z-index: 1;
+    
+}
+
+.cover-option input[type="checkbox"]:focus + label::before {
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+}
+
+.cover-option:hover input[type="checkbox"] + label::before {
+    border-color: #777;
+}
+
+.cover-option:hover input[type="checkbox"]:checked + label::before {
+    border-color: #0078D7;
+}
+
+.cover-option .image-upload-container {
+    margin-top: 12px;
+    margin-left: 28px;
+}
+
+.cover-option input[type="checkbox"] + label:hover {
+    color: #FFFFFF;
+}
+
+.cover-option input[type="checkbox"]:checked ~ .image-upload-container {
+    opacity: 1;
+}
+
+.cover-option input[type="checkbox"]:not(:checked) ~ .image-upload-container {
+    opacity: 0.85;
 }

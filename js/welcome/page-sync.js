@@ -1,6 +1,6 @@
 /**
- * Este archivo garantiza la sincronización entre el número de páginas seleccionado
- * y su representación visual en el asistente de creación de libros.
+ * This script is designed to synchronize the page count and cover image settings
+ * between the book wizard and the visual representation of the book.
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const pagesContainer = document.getElementById('pages-visual-container');
         if (!pagesContainer) return;
 
-        // Create a script to update the page icons
         const script = document.createElement('script');
         script.textContent = `
             (function() {

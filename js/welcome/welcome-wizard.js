@@ -718,16 +718,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const dataWithoutImages = {...window.bookData};
                 
-                console.log("Saving book data with:", {
-                    dimensions: `${window.bookData.bookWidth}x${window.bookData.bookHeight}`,
-                    pageCount: window.bookData.pageCount,
-                    coverType: window.bookData.coverType,
-                    backCoverType: window.bookData.backCoverType,
-                    hasImages: {
-                        cover: Boolean(window.bookData.coverImage),
-                        backCover: Boolean(window.bookData.backCoverImage)
-                    }
-                });
+                // console.log("Saving book data with:", {
+                //     dimensions: `${window.bookData.bookWidth}x${window.bookData.bookHeight}`,
+                //     pageCount: window.bookData.pageCount,
+                //     coverType: window.bookData.coverType,
+                //     backCoverType: window.bookData.backCoverType,
+                //     hasImages: {
+                //         cover: Boolean(window.bookData.coverImage),
+                //         backCover: Boolean(window.bookData.backCoverImage)
+                //     }
+                // });
 
                 localStorage.setItem('newBookWizardData', JSON.stringify(dataWithoutImages));
                 resolve(true);

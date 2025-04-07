@@ -115,7 +115,7 @@
                         <p>Customize the appearance of your book's front cover.</p>
                         
                         <div class="cover-options">
-                            <div class="cover-option">
+                            <div class="cover-option required-option">
                                 <input type="hidden" name="cover-type" id="cover-color" value="true" checked>
                                 <label>Solid Color (Required)</label>
                                 
@@ -146,6 +146,11 @@
                                     <input type="file" id="cover-image-input" accept="image/*" style="display: none;">
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="wizard-tip">
+                            <i class="ri-information-line"></i>
+                            <p>The system will use both the solid color and the background image. For the front of the book, the solid color will be used as the inner side of that page. It is recommended to use the same color as the adjacent page.</p>
                         </div>
                     </div>
                     
@@ -186,7 +191,7 @@
                         <p>Customize the appearance of your book's back cover.</p>
                         
                         <div class="cover-options">
-                            <div class="cover-option">
+                            <div class="cover-option required-option">
                                 <input type="hidden" name="back-cover-type" id="back-cover-color" value="true" checked>
                                 <label>Solid Color (Required)</label>
                                 
@@ -217,6 +222,11 @@
                                     <input type="file" id="back-cover-image-input" accept="image/*" style="display: none;">
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="wizard-tip">
+                            <i class="ri-information-line"></i>
+                            <p>The system will use both the solid color and the background image. For the back of the book, the solid color will be used as the inner side of that page. It is recommended to use the same color as the adjacent page.</p>
                         </div>
                     </div>
                     

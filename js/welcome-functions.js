@@ -16,7 +16,6 @@ function updatePagesVisual() {
     coverIcon.className = 'page-item cover';
     coverIcon.textContent = 'FRONT';
     
-    // Always prioritize background image if available
     if (window.bookData && window.bookData.coverImageEnabled && window.bookData.coverImage) {
         coverIcon.style.backgroundImage = `url(${window.bookData.coverImage})`;
         coverIcon.style.backgroundColor = 'transparent';
@@ -60,7 +59,6 @@ function updatePagesVisual() {
     backIcon.className = 'page-item back';
     backIcon.textContent = 'BACK';
     
-    // Always prioritize background image if available
     if (window.bookData && window.bookData.backCoverImageEnabled && window.bookData.backCoverImage) {
         backIcon.style.backgroundImage = `url(${window.bookData.backCoverImage})`;
         backIcon.style.backgroundColor = 'transparent';

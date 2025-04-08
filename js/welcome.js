@@ -115,36 +115,43 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCoverPreview();
     });
 
-    function updateCoverPreview() {
+    function updateCoverPreview(forceMode) {
         const frontCovers = document.querySelectorAll('.front-preview .book-cover');
-        frontCovers.forEach(cover => {
-            if (cover) {
-                cover.style.backgroundColor = bookData.coverColor || '#DC143C';
-                if (bookData.coverImageEnabled && bookData.coverImage) {
-                    cover.style.backgroundImage = `url(${bookData.coverImage})`;
-                } else {
-                    cover.style.backgroundImage = '';
-                }
-            }
-        });
-
         const frontFace = document.querySelector('.book-preview-3d .front');
-        if (frontFace) {
-            frontFace.style.backgroundColor = bookData.coverColor || '#DC143C';
-            if (bookData.coverImageEnabled && bookData.coverImage) {
-                frontFace.style.backgroundImage = `url(${bookData.coverImage})`;
-            } else {
-                frontFace.style.backgroundImage = '';
-            }
-        }
-
         const coverPage = document.querySelector('.pages-visual .cover');
-        if (coverPage) {
-            coverPage.style.backgroundColor = bookData.coverColor || '#DC143C';
-            if (bookData.coverImageEnabled && bookData.coverImage) {
-                coverPage.style.backgroundImage = `url(${bookData.coverImage})`;
-            } else {
+        const viewMode = forceMode || document.querySelector('[data-step="3"] .view-mode-btn.active')?.dataset.viewMode;
+
+        if (viewMode === 'color' || viewMode === 'current' && !bookData.coverImageEnabled) {
+            if (frontFace) {
+                frontFace.style.backgroundImage = '';
+                frontFace.style.backgroundColor = bookData.coverColor || '#DC143C';
+            }
+
+            frontCovers.forEach(cover => {
+                cover.style.backgroundImage = '';
+                cover.style.backgroundColor = bookData.coverColor || '#DC143C';
+            });
+
+            if (coverPage) {
                 coverPage.style.backgroundImage = '';
+                coverPage.style.backgroundColor = bookData.coverColor || '#DC143C';
+            }
+        } else if (viewMode === 'image' || viewMode === 'current' && bookData.coverImageEnabled) {
+            if (bookData.coverImage) {
+                if (frontFace) {
+                    frontFace.style.backgroundImage = `url(${bookData.coverImage})`;
+                    frontFace.style.backgroundColor = 'transparent';
+                }
+
+                frontCovers.forEach(cover => {
+                    cover.style.backgroundImage = `url(${bookData.coverImage})`;
+                    cover.style.backgroundColor = 'transparent';
+                });
+
+                if (coverPage) {
+                    coverPage.style.backgroundImage = `url(${bookData.coverImage})`;
+                    coverPage.style.backgroundColor = 'transparent';
+                }
             }
         }
     }
@@ -193,7 +200,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
             } else {
-              //  console.warn("BookImageUtils not available, skipping size check");
                 if (file.size > (MAX_IMAGE_SIZE_KB * 1024)) {
                     this.value = '';
                     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -239,6 +245,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 updatePageIcons(bookData.pageCount);
                 updateCoverRemoveButtonVisibility();
 
+                const imageBtn = document.querySelector('[data-step="3"] .view-mode-btn[data-view-mode="image"]');
+                if (imageBtn) {
+                    imageBtn.classList.remove('disabled');
+                    imageBtn.removeAttribute('disabled');
+
+                    const viewModeButtons = document.querySelectorAll('[data-step="3"] .view-mode-btn');
+                    viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                    imageBtn.classList.add('active');
+                }
+
                 const radioEvent = new Event('change');
                 document.getElementById('cover-image').dispatchEvent(radioEvent);
             };
@@ -251,6 +267,20 @@ document.addEventListener('DOMContentLoaded', function () {
         coverImageName.textContent = 'No image selected';
         document.getElementById('cover-color').checked = true;
         bookData.coverImageEnabled = false;
+
+        const imageBtn = document.querySelector('[data-step="3"] .view-mode-btn[data-view-mode="image"]');
+        if (imageBtn) {
+            imageBtn.classList.add('disabled');
+            imageBtn.setAttribute('disabled', 'disabled');
+
+            if (imageBtn.classList.contains('active')) {
+                const viewModeButtons = document.querySelectorAll('[data-step="3"] .view-mode-btn');
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+
+                const colorBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+                if (colorBtn) colorBtn.classList.add('active');
+            }
+        }
 
         const radioEvent = new Event('change');
         document.getElementById('cover-color').dispatchEvent(radioEvent);
@@ -320,36 +350,43 @@ document.addEventListener('DOMContentLoaded', function () {
         updateBackCoverPreview();
     });
 
-    function updateBackCoverPreview() {
+    function updateBackCoverPreview(forceMode) {
         const backCovers = document.querySelectorAll('.back-preview .book-cover');
-        backCovers.forEach(cover => {
-            if (cover) {
-                cover.style.backgroundColor = bookData.backCoverColor || '#DC143C';
-                if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
-                    cover.style.backgroundImage = `url(${bookData.backCoverImage})`;
-                } else {
-                    cover.style.backgroundImage = '';
-                }
-            }
-        });
-
         const backFace = document.querySelector('.book-preview-3d .back');
-        if (backFace) {
-            backFace.style.backgroundColor = bookData.backCoverColor || '#DC143C';
-            if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
-                backFace.style.backgroundImage = `url(${bookData.backCoverImage})`;
-            } else {
-                backFace.style.backgroundImage = '';
-            }
-        }
-
         const backPage = document.querySelector('.pages-visual .back');
-        if (backPage) {
-            backPage.style.backgroundColor = bookData.backCoverColor || '#DC143C';
-            if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
-                backPage.style.backgroundImage = `url(${bookData.backCoverImage})`;
-            } else {
+        const viewMode = forceMode || document.querySelector('[data-step="4"] .view-mode-btn.active')?.dataset.viewMode;
+
+        if (viewMode === 'color' || viewMode === 'current' && !bookData.backCoverImageEnabled) {
+            if (backFace) {
+                backFace.style.backgroundImage = '';
+                backFace.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            }
+
+            backCovers.forEach(cover => {
+                cover.style.backgroundImage = '';
+                cover.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            });
+
+            if (backPage) {
                 backPage.style.backgroundImage = '';
+                backPage.style.backgroundColor = bookData.backCoverColor || '#DC143C';
+            }
+        } else if (viewMode === 'image' || viewMode === 'current' && bookData.backCoverImageEnabled) {
+            if (bookData.backCoverImage) {
+                if (backFace) {
+                    backFace.style.backgroundImage = `url(${bookData.backCoverImage})`;
+                    backFace.style.backgroundColor = 'transparent';
+                }
+
+                backCovers.forEach(cover => {
+                    cover.style.backgroundImage = `url(${bookData.backCoverImage})`;
+                    cover.style.backgroundColor = 'transparent';
+                });
+
+                if (backPage) {
+                    backPage.style.backgroundImage = `url(${bookData.backCoverImage})`;
+                    backPage.style.backgroundColor = 'transparent';
+                }
             }
         }
     }
@@ -398,7 +435,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
             } else {
-              //  console.warn("BookImageUtils not available, skipping size check");
                 if (file.size > (MAX_IMAGE_SIZE_KB * 1024)) {
                     this.value = '';
                     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
@@ -444,6 +480,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 updatePageIcons(bookData.pageCount);
                 updateBackCoverRemoveButtonVisibility();
 
+                const imageBtn = document.querySelector('[data-step="4"] .view-mode-btn[data-view-mode="image"]');
+                if (imageBtn) {
+                    imageBtn.classList.remove('disabled');
+                    imageBtn.removeAttribute('disabled');
+
+                    const viewModeButtons = document.querySelectorAll('[data-step="4"] .view-mode-btn');
+                    viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                    imageBtn.classList.add('active');
+                }
+
                 const radioEvent = new Event('change');
                 document.getElementById('back-cover-image').dispatchEvent(radioEvent);
             };
@@ -456,6 +502,20 @@ document.addEventListener('DOMContentLoaded', function () {
         backCoverImageName.textContent = 'No image selected';
         document.getElementById('back-cover-color').checked = true;
         bookData.backCoverImageEnabled = false;
+
+        const imageBtn = document.querySelector('[data-step="4"] .view-mode-btn[data-view-mode="image"]');
+        if (imageBtn) {
+            imageBtn.classList.add('disabled');
+            imageBtn.setAttribute('disabled', 'disabled');
+
+            if (imageBtn.classList.contains('active')) {
+                const viewModeButtons = document.querySelectorAll('[data-step="4"] .view-mode-btn');
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+
+                const colorBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+                if (colorBtn) colorBtn.classList.add('active');
+            }
+        }
 
         const radioEvent = new Event('change');
         document.getElementById('back-cover-color').dispatchEvent(radioEvent);
@@ -489,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const count = parseInt(this.value) || 0;
         bookData.pageCount = count;
         updatePageIcons(count);
-        
+
         if (currentStep === 6) {
             updateSummary();
         }
@@ -504,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const coverIcon = document.createElement('div');
         coverIcon.className = 'page-item cover';
         coverIcon.textContent = 'FRONT';
-        
+
         if (bookData.coverImageEnabled && bookData.coverImage) {
             coverIcon.style.backgroundImage = `url(${bookData.coverImage})`;
             coverIcon.style.backgroundColor = 'transparent';
@@ -529,12 +589,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 pageItem.textContent = i;
                 container.appendChild(pageItem);
             }
-            
+
             const ellipsis = document.createElement('div');
             ellipsis.className = 'page-item ellipsis';
             ellipsis.innerHTML = '&hellip;';
             container.appendChild(ellipsis);
-            
+
             for (let i = count - 1; i <= count; i++) {
                 const pageItem = document.createElement('div');
                 pageItem.className = 'page-item';
@@ -546,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const backIcon = document.createElement('div');
         backIcon.className = 'page-item back';
         backIcon.textContent = 'BACK';
-        
+
         if (bookData.backCoverImageEnabled && bookData.backCoverImage) {
             backIcon.style.backgroundImage = `url(${bookData.backCoverImage})`;
             backIcon.style.backgroundColor = 'transparent';
@@ -557,6 +617,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         container.appendChild(backIcon);
     }
+
+    document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (this.classList.contains('disabled')) return;
+
+            const viewModeButtons = this.parentElement.querySelectorAll('.view-mode-btn');
+            viewModeButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const step = this.closest('[data-step]')?.getAttribute('data-step');
+            const coverType = step === '3' ? 'front' : 'back';
+            const viewMode = this.getAttribute('data-view-mode');
+
+            if (coverType === 'front') {
+                updateCoverPreview(viewMode);
+            } else if (coverType === 'back') {
+                updateBackCoverPreview(viewMode);
+            }
+        });
+    });
 
     function showWizard() {
         welcomeContainer.style.opacity = '0';
@@ -588,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector(`.wizard-step[data-step="${currentStep}"]`).style.display = 'block';
             updateStepIndicators();
             updateNavButtons();
-            
+
             if (currentStep === 4) {
                 if (typeof updatePagesVisual === 'function') {
                     updatePagesVisual();
@@ -604,13 +684,13 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector(`.wizard-step[data-step="${currentStep}"]`).style.display = 'block';
             updateStepIndicators();
             updateNavButtons();
-            
+
             if (currentStep === 4) {
                 if (typeof updatePagesVisual === 'function') {
                     updatePagesVisual();
                 }
             }
-            
+
             if (currentStep === 6) {
                 const pageCountInput = document.getElementById('wizard-page-count');
                 if (pageCountInput && bookData) {
@@ -644,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateNextButtonState() {
         const nextButton = document.getElementById('next-step-btn');
         if (!nextButton) return;
-        
+
         const wizardSteps = document.querySelectorAll('.wizard-step');
         let currentStep = 1;
 
@@ -654,11 +734,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 break;
             }
         }
-        
+
         if (currentStep === 3) {
             const frontCoverType = document.querySelector('input[name="cover-type"]:checked')?.value;
             const isFrontCoverImage = bookData.coverImageEnabled;
-            
+
             if (isFrontCoverImage) {
                 nextButton.disabled = !frontCoverImageValid || !bookData.coverImage;
             } else {
@@ -667,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (currentStep === 4) {
             const backCoverType = document.querySelector('input[name="back-cover-type"]:checked')?.value;
             const isBackCoverImage = bookData.backCoverImageEnabled;
-            
+
             if (isBackCoverImage) {
                 nextButton.disabled = !backCoverImageValid || !bookData.backCoverImage;
             } else {
@@ -688,10 +768,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateSummary() {
         const pageCount = parseInt(bookData.pageCount) || 0;
         const totalPages = pageCount + 2;
-        
+
         document.getElementById('summary-name').textContent = bookData.name;
         document.getElementById('summary-dimensions').textContent = `${bookData.width} × ${bookData.height} pixels`;
-        document.getElementById('summary-pages').textContent = 
+        document.getElementById('summary-pages').textContent =
             `${totalPages} (Front Cover + ${pageCount} inner pages + Back Cover)`;
     }
 
@@ -745,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }));
 
         console.log("Datos del libro guardados, redirigiendo al editor...");
-        
+
         setTimeout(() => {
             window.location.href = 'index.html?newBook=true';
         }, 100);
@@ -756,12 +836,12 @@ document.addEventListener('DOMContentLoaded', function () {
         reader.onload = function (e) {
             try {
                 const data = JSON.parse(e.target.result);
-                
+
                 if (!data.pages || !Array.isArray(data.pages) || data.pages.length < 2) {
                     notifications.error("Invalid book file format. The book must have at least 2 pages.");
                     return;
                 }
-                
+
                 const processedData = {
                     ...data,
                     bookName: data.bookName || "Untitled Book",
@@ -774,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 sessionStorage.setItem('loadedBookData', JSON.stringify(processedData));
                 sessionStorage.setItem('isLoadingBook', 'true');
-                
+
                 notifications.success('Book loaded successfully!');
 
                 setTimeout(() => {
@@ -787,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        reader.onerror = function() {
+        reader.onerror = function () {
             notifications.error("Error reading file. Please try again.");
         };
 
@@ -816,7 +896,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateCoverRemoveButtonVisibility();
         updateBackCoverRemoveButtonVisibility();
     }
-
 
     function setupDualPreview() {
         const previewBtns = document.querySelectorAll('.preview-toggle-btn');
@@ -883,7 +962,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     init();
-
 
     setupDualPreview();
 
@@ -1047,19 +1125,19 @@ function createBookFromWizard() {
     const bookWidth = parseInt(document.getElementById('wizard-book-width').value) || 350;
     const bookHeight = parseInt(document.getElementById('wizard-book-height').value) || 400;
     const pagesCount = Math.max(1, parseInt(document.getElementById('wizard-page-count').value) || 1);
-    
+
     console.log(`Creating book with ${pagesCount} internal pages (+ front and back cover)`);
-    
+
     const coverImageEnabled = bookData.coverImageEnabled || false;
     const coverColor = document.getElementById('wizard-cover-color').value || '#DC143C';
     const coverImage = coverImageData || '';
-    
+
     const backCoverImageEnabled = bookData.backCoverImageEnabled || false;
     const backCoverColor = document.getElementById('wizard-back-cover-color').value || '#DC143C';
     const backCoverImage = backCoverImageData || '';
 
     const pages = [];
-    
+
     pages.push({
         name: "Cover",
         width: bookWidth,
@@ -1069,7 +1147,7 @@ function createBookFromWizard() {
         alignment: "center",
         contentHtml: "<p>Your Book Title</p>"
     });
-    
+
     for (let i = 0; i < pagesCount; i++) {
         pages.push({
             name: `Page ${i + 1}`,
@@ -1081,7 +1159,7 @@ function createBookFromWizard() {
             contentHtml: ""
         });
     }
-    
+
     pages.push({
         name: "Back Cover",
         width: bookWidth,
@@ -1091,7 +1169,7 @@ function createBookFromWizard() {
         alignment: "center",
         contentHtml: ""
     });
-    
+
     console.log("Creating book with:", {
         pageCount: pagesCount,
         totalPages: pages.length,
@@ -1100,13 +1178,13 @@ function createBookFromWizard() {
             backCover: Boolean(backCoverImage)
         }
     });
-    
+
     if (pages.length < 2) {
         console.error("Failed to create sufficient pages");
         notifications.error("Error creating book: Invalid page count");
         return;
     }
-    
+
     const bookData = {
         bookName: bookName,
         bookWidth: bookWidth,
@@ -1120,9 +1198,7 @@ function createBookFromWizard() {
         pageCount: pagesCount,
         pages: pages
     };
-    
-   // console.log("Saving book data with pages:", bookData.pages.length);
-    
+
     let storageSuccess = false;
     if (window.BookImageUtils) {
         const bookDataJson = JSON.stringify(bookData);
@@ -1135,13 +1211,13 @@ function createBookFromWizard() {
             handleCreateBookError(error);
         }
     }
-    
+
     if (storageSuccess) {
         console.log(`Successfully saved ${pages.length} pages to localStorage`);
         console.log('Book data saved:', bookData);
-        
+
         sessionStorage.setItem('fromWelcome', 'true');
-        
+
         setTimeout(() => {
             window.location.href = 'index.html?newBook=true';
         }, 100);
@@ -1149,14 +1225,14 @@ function createBookFromWizard() {
 }
 
 function handleCreateBookError(error) {
-    const isQuotaError = error.name === 'QuotaExceededError' || 
-                         error.name === 'NS_ERROR_DOM_QUOTA_REACHED';
-    
+    const isQuotaError = error.name === 'QuotaExceededError' ||
+        error.name === 'NS_ERROR_DOM_QUOTA_REACHED';
+
     if (isQuotaError) {
         try {
             sessionStorage.setItem('newBookWizardData', JSON.stringify(window.bookData));
             sessionStorage.setItem('useSessionStorage', 'true');
-            
+
             if (window.notifications) {
                 window.notifications.warning(
                     "Your book is too large for persistent storage. " +
@@ -1166,14 +1242,14 @@ function handleCreateBookError(error) {
             } else {
                 alert("Storage limit exceeded. Using temporary storage instead. Your book will be available for this session only.");
             }
-            
+
             setTimeout(() => {
                 window.location.href = 'index.html?newBook=true&useSessionStorage=true';
             }, 1500);
-            
+
         } catch (sessionError) {
             console.error('SessionStorage fallback failed:', sessionError);
-            
+
             if (window.notifications) {
                 window.notifications.error(
                     "Unable to create book due to image size limitations. " +

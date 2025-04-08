@@ -214,6 +214,41 @@ document.addEventListener('DOMContentLoaded', function () {
                     (window.bookData.backCoverType === 'image' && window.bookData.backCoverImage) ? 
                     'inline-flex' : 'none';
             }
+            
+            // Initialize view mode button states
+            const frontImageBtn = document.querySelector('[data-step="3"] .view-mode-btn[data-view-mode="image"]');
+            if (frontImageBtn) {
+                if (!window.bookData.coverImage || !window.bookData.coverImageEnabled) {
+                    frontImageBtn.classList.add('disabled');
+                    frontImageBtn.setAttribute('disabled', 'disabled');
+                    
+                    if (frontImageBtn.classList.contains('active')) {
+                        frontImageBtn.classList.remove('active');
+                        const colorBtn = document.querySelector('[data-step="3"] .view-mode-btn[data-view-mode="color"]');
+                        if (colorBtn) colorBtn.classList.add('active');
+                    }
+                } else {
+                    frontImageBtn.classList.remove('disabled');
+                    frontImageBtn.removeAttribute('disabled');
+                }
+            }
+            
+            const backImageBtn = document.querySelector('[data-step="4"] .view-mode-btn[data-view-mode="image"]');
+            if (backImageBtn) {
+                if (!window.bookData.backCoverImage || !window.bookData.backCoverImageEnabled) {
+                    backImageBtn.classList.add('disabled');
+                    backImageBtn.setAttribute('disabled', 'disabled');
+                    
+                    if (backImageBtn.classList.contains('active')) {
+                        backImageBtn.classList.remove('active');
+                        const colorBtn = document.querySelector('[data-step="4"] .view-mode-btn[data-view-mode="color"]');
+                        if (colorBtn) colorBtn.classList.add('active');
+                    }
+                } else {
+                    backImageBtn.classList.remove('disabled');
+                    backImageBtn.removeAttribute('disabled');
+                }
+            }
         }
     }
 

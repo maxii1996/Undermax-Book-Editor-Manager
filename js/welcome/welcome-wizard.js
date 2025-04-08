@@ -6,8 +6,50 @@ document.addEventListener('DOMContentLoaded', function () {
     const frontColorPicker = document.getElementById('wizard-cover-color');
 
     if (frontColorPicker) {
-        ['input', 'change'].forEach(evt => {
-            frontColorPicker.addEventListener(evt, updateFrontCoverColor);
+        // Force color mode during color picking
+        frontColorPicker.addEventListener('input', function() {
+            const viewModeButtons = document.querySelectorAll('[data-step="3"] .view-mode-btn');
+            const colorModeBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+            if (colorModeBtn && !colorModeBtn.classList.contains('active')) {
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                colorModeBtn.classList.add('active');
+            }
+            updateFrontCoverColor.call(this);
+        });
+        
+        frontColorPicker.addEventListener('change', updateFrontCoverColor);
+        
+        frontColorPicker.addEventListener('click', function() {
+            // When color picker is opened, force color view mode
+            const viewModeButtons = document.querySelectorAll('[data-step="3"] .view-mode-btn');
+            const colorModeBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+            if (colorModeBtn) {
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                colorModeBtn.classList.add('active');
+            }
+            
+            if (!window.bookData) window.bookData = {};
+            if (!window.originalStates) window.originalStates = {};
+            
+            const frontElement = document.querySelector('.book-preview-3d .front');
+            const frontPreviewCovers = document.querySelectorAll('.front-preview .book-cover');
+            
+            if (!window.originalStates.frontCoverBg && frontElement) {
+                window.originalStates.frontCoverBg = {
+                    backgroundColor: frontElement.style.backgroundColor,
+                    backgroundImage: frontElement.style.backgroundImage
+                };
+            }
+            
+            frontPreviewCovers.forEach(cover => {
+                if (!window.originalStates.frontCovers) window.originalStates.frontCovers = [];
+                window.originalStates.frontCovers.push({
+                    backgroundColor: cover.style.backgroundColor,
+                    backgroundImage: cover.style.backgroundImage
+                });
+            });
+            
+            updateFrontCoverColor.call(this);
         });
 
         updateFrontCoverColor.call(frontColorPicker);
@@ -56,8 +98,50 @@ document.addEventListener('DOMContentLoaded', function () {
     const backColorPicker = document.getElementById('wizard-back-cover-color');
 
     if (backColorPicker) {
-        ['input', 'change'].forEach(evt => {
-            backColorPicker.addEventListener(evt, updateBackCoverColor);
+        // Force color mode during color picking
+        backColorPicker.addEventListener('input', function() {
+            const viewModeButtons = document.querySelectorAll('[data-step="4"] .view-mode-btn');
+            const colorModeBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+            if (colorModeBtn && !colorModeBtn.classList.contains('active')) {
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                colorModeBtn.classList.add('active');
+            }
+            updateBackCoverColor.call(this);
+        });
+        
+        backColorPicker.addEventListener('change', updateBackCoverColor);
+        
+        backColorPicker.addEventListener('click', function() {
+            // When color picker is opened, force color view mode
+            const viewModeButtons = document.querySelectorAll('[data-step="4"] .view-mode-btn');
+            const colorModeBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+            if (colorModeBtn) {
+                viewModeButtons.forEach(btn => btn.classList.remove('active'));
+                colorModeBtn.classList.add('active');
+            }
+            
+            if (!window.bookData) window.bookData = {};
+            if (!window.originalStates) window.originalStates = {};
+            
+            const backElement = document.querySelector('.book-preview-3d .back');
+            const backPreviewCovers = document.querySelectorAll('.back-preview .book-cover');
+            
+            if (!window.originalStates.backCoverBg && backElement) {
+                window.originalStates.backCoverBg = {
+                    backgroundColor: backElement.style.backgroundColor,
+                    backgroundImage: backElement.style.backgroundImage
+                };
+            }
+            
+            backPreviewCovers.forEach(cover => {
+                if (!window.originalStates.backCovers) window.originalStates.backCovers = [];
+                window.originalStates.backCovers.push({
+                    backgroundColor: cover.style.backgroundColor,
+                    backgroundImage: cover.style.backgroundImage
+                });
+            });
+            
+            updateBackCoverColor.call(this);
         });
 
         updateBackCoverColor.call(backColorPicker);
@@ -620,6 +704,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateSummary();
             }, 50);
         }
+
+        document.querySelectorAll('.view-mode-btn[data-view-mode="current"]').forEach(btn => {
+            if (!btn.classList.contains('active')) {
+                btn.click();
+            }
+        });
     });
 
     prevBtn.addEventListener('click', function () {
@@ -641,6 +731,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateSummary();
             }, 50);
         }
+
+        document.querySelectorAll('.view-mode-btn[data-view-mode="current"]').forEach(btn => {
+            if (!btn.classList.contains('active')) {
+                btn.click();
+            }
+        });
     });
 
     document.addEventListener('DOMContentLoaded', updatePagesVisual);
@@ -718,16 +814,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const dataWithoutImages = {...window.bookData};
                 
-                // console.log("Saving book data with:", {
-                //     dimensions: `${window.bookData.bookWidth}x${window.bookData.bookHeight}`,
-                //     pageCount: window.bookData.pageCount,
-                //     coverType: window.bookData.coverType,
-                //     backCoverType: window.bookData.backCoverType,
-                //     hasImages: {
-                //         cover: Boolean(window.bookData.coverImage),
-                //         backCover: Boolean(window.bookData.backCoverImage)
-                //     }
-                // });
 
                 localStorage.setItem('newBookWizardData', JSON.stringify(dataWithoutImages));
                 resolve(true);
@@ -923,6 +1009,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof saveBookDataToLocalStorage === 'function') {
             saveBookDataToLocalStorage();
         }
+
+        updateViewModeSelectors();
     });
 
     document.getElementById('back-cover-image')?.addEventListener('change', function() {
@@ -968,5 +1056,114 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof saveBookDataToLocalStorage === 'function') {
             saveBookDataToLocalStorage();
         }
+
+        updateViewModeSelectors();
     });
+
+    function setupViewModeSelector(step, coverType) {
+        const viewModeButtons = document.querySelectorAll(`[data-step="${step}"] .view-mode-btn`);
+        const imageBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'image');
+        
+        const hasImage = coverType === 'front' 
+            ? window.bookData?.coverImage && window.bookData.coverImageEnabled
+            : window.bookData?.backCoverImage && window.bookData.backCoverImageEnabled;
+            
+        if (imageBtn) {
+            if (!hasImage) {
+                imageBtn.classList.add('disabled');
+                imageBtn.setAttribute('disabled', 'disabled');
+                if (imageBtn.classList.contains('active')) {
+                    imageBtn.classList.remove('active');
+                    const colorBtn = Array.from(viewModeButtons).find(btn => btn.dataset.viewMode === 'color');
+                    if (colorBtn) colorBtn.classList.add('active');
+                }
+            } else {
+                imageBtn.classList.remove('disabled');
+                imageBtn.removeAttribute('disabled');
+            }
+        }
+    }
+
+    function updateViewModeSelectors() {
+        setupViewModeSelector(3, 'front');
+        setupViewModeSelector(4, 'back');
+    }
+
+    const setupViewModeSelectors = function() {
+        updateViewModeSelectors();
+        
+        document.querySelectorAll('.view-mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+                
+                const parent = this.closest('[data-step]');
+                if (!parent) return;
+                
+                const viewModeButtons = parent.querySelectorAll('.view-mode-btn');
+                viewModeButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const step = parent.getAttribute('data-step');
+                const coverType = step === '3' ? 'front' : 'back';
+                const viewMode = this.getAttribute('data-view-mode');
+                
+                updateCoverPreviewByViewMode(coverType, viewMode);
+            });
+        });
+    };
+
+    function updateCoverPreviewByViewMode(coverType, viewMode) {
+        const isImageEnabled = coverType === 'front' 
+            ? window.bookData?.coverImageEnabled 
+            : window.bookData?.backCoverImageEnabled;
+            
+        const imageUrl = coverType === 'front' 
+            ? window.bookData?.coverImage 
+            : window.bookData?.backCoverImage;
+            
+        const color = coverType === 'front' 
+            ? window.bookData?.coverColor || '#DC143C' 
+            : window.bookData?.backCoverColor || '#DC143C';
+            
+        const previewElement = document.querySelector(`.book-preview-3d .${coverType}`);
+        const previewCovers = document.querySelectorAll(`.${coverType}-preview .book-cover`);
+        const pageVisualItem = document.querySelector(`.pages-visual .${coverType === 'front' ? 'cover' : 'back'}`);
+        
+        if (viewMode === 'color' || viewMode === 'current' && !isImageEnabled) {
+            if (previewElement) {
+                previewElement.style.backgroundImage = '';
+                previewElement.style.backgroundColor = color;
+            }
+            
+            previewCovers.forEach(cover => {
+                cover.style.backgroundImage = '';
+                cover.style.backgroundColor = color;
+            });
+            
+            if (pageVisualItem) {
+                pageVisualItem.style.backgroundImage = '';
+                pageVisualItem.style.backgroundColor = color;
+            }
+        } 
+        else if (viewMode === 'image' || viewMode === 'current' && isImageEnabled) {
+            if (imageUrl) {
+                if (previewElement) {
+                    previewElement.style.backgroundImage = `url(${imageUrl})`;
+                    previewElement.style.backgroundColor = 'transparent';
+                }
+                
+                previewCovers.forEach(cover => {
+                    cover.style.backgroundImage = `url(${imageUrl})`;
+                    cover.style.backgroundColor = 'transparent';
+                });
+                
+                if (pageVisualItem) {
+                    pageVisualItem.style.backgroundImage = `url(${imageUrl})`;
+                    pageVisualItem.style.backgroundColor = 'transparent';
+                }
+            }
+        }
+    }
+
+    setupViewModeSelectors();
 });

@@ -835,7 +835,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const reader = new FileReader();
         reader.onload = function (e) {
             try {
-                const data = JSON.parse(e.target.result);
+                const fileContent = e.target.result;
+                let data;
+                
+                const isEncrypted = file.name.toLowerCase().endsWith('.ebk') || 
+                                  (window.EncryptionUtils && EncryptionUtils.isEncryptedFormat(fileContent));
+                
+                if (isEncrypted && window.EncryptionUtils) {
+                    try {
+                        data = EncryptionUtils.decryptData(fileContent);
+                        notifications.info("Loaded encrypted book file");
+                    } catch (decryptError) {
+                        throw new Error("Failed to decrypt book file: " + decryptError.message);
+                    }
+                } else {
+                    data = JSON.parse(fileContent);
+                }
 
                 if (!data.pages || !Array.isArray(data.pages) || data.pages.length < 2) {
                     notifications.error("Invalid book file format. The book must have at least 2 pages.");
@@ -862,7 +877,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 1000);
 
             } catch (error) {
-                console.error("Error parsing JSON file:", error);
+                console.error("Error parsing book file:", error);
                 notifications.error("Error loading book: " + error.message);
             }
         };

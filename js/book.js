@@ -2,12 +2,19 @@ function saveSettings() {
 }
 
 function loadSettings() {
-    document.getElementById("bookName").value = bookData.bookName;
-    document.getElementById("bookWidth").value = bookData.bookWidth;
-    document.getElementById("bookHeight").value = bookData.bookHeight;
-    document.getElementById("coverColorInput").value = bookData.coverColor;
-    document.getElementById("backCoverColorInput").value = bookData.backCoverColor;
-    document.getElementById("editorColorInput").value = bookData.editorColor;
+    const bookNameEl = document.getElementById("bookName");
+    const bookWidthEl = document.getElementById("bookWidth");  
+    const bookHeightEl = document.getElementById("bookHeight");
+    const coverColorInputEl = document.getElementById("coverColorInput");
+    const backCoverColorInputEl = document.getElementById("backCoverColorInput");
+    const editorColorInputEl = document.getElementById("editorColorInput");
+    
+    if (bookNameEl) bookNameEl.value = bookData.bookName;
+    if (bookWidthEl) bookWidthEl.value = bookData.bookWidth;
+    if (bookHeightEl) bookHeightEl.value = bookData.bookHeight;
+    if (coverColorInputEl) coverColorInputEl.value = bookData.coverColor;
+    if (backCoverColorInputEl) backCoverColorInputEl.value = bookData.backCoverColor;
+    if (editorColorInputEl) editorColorInputEl.value = bookData.editorColor;
 
     updateEditorColor();
 }
@@ -1089,7 +1096,6 @@ function validateBookImages() {
                     });
                 }
             };
-          //  console.warn("BookImageUtils not found, using fallback implementation");
         }
         
         async function processPage(index) {
@@ -1238,11 +1244,34 @@ function downloadJSON() {
                 backCoverColor: bookData.backCoverColor,
                 pages: pages
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            
+            const formatSelector = document.getElementById("book-format-selector");
+            const selectedFormat = formatSelector ? formatSelector.value : "json";
+            
+            let contentType, fileExtension, content;
+            
+            if (selectedFormat === "encrypted") {
+                if (window.EncryptionUtils) {
+                    content = EncryptionUtils.encryptData(data);
+                    contentType = "application/octet-stream";
+                    fileExtension = ".ebk";
+                } else {
+                    content = JSON.stringify(data, null, 2);
+                    contentType = "application/json";
+                    fileExtension = ".json";
+                    notifications.warning("Encryption module not available, saving as JSON instead.");
+                }
+            } else {
+                content = JSON.stringify(data, null, 2);
+                contentType = "application/json";
+                fileExtension = ".json";
+            }
+            
+            const blob = new Blob([content], { type: contentType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = bookData.bookName + ".json";
+            a.download = bookData.bookName + fileExtension;
             a.click();
             URL.revokeObjectURL(url);
 
@@ -1295,7 +1324,21 @@ function processBookFile(file) {
     reader.onload = function (e) {
         try {
             const fileContent = e.target.result;
-            const newData = JSON.parse(fileContent);
+            let newData;
+            
+            const isEncrypted = file.name.toLowerCase().endsWith('.ebk') || 
+                               (window.EncryptionUtils && EncryptionUtils.isEncryptedFormat(fileContent));
+            
+            if (isEncrypted && window.EncryptionUtils) {
+                try {
+                    newData = EncryptionUtils.decryptData(fileContent);
+                    notifications.info("Loaded encrypted book file");
+                } catch (decryptError) {
+                    throw new Error("Failed to decrypt book file: " + decryptError.message);
+                }
+            } else {
+                newData = JSON.parse(fileContent);
+            }
 
             if (newData.bookName === undefined || newData.pages === undefined) {
                 throw new Error("Invalid book file format.");
@@ -1333,7 +1376,7 @@ function processBookFile(file) {
                 notifications.success("Book loaded successfully!");
             }
         } catch (error) {
-            console.error("Error parsing JSON file:", error);
+            console.error("Error parsing book file:", error);
             if (typeof BookEditorNotifications !== 'undefined') {
                 BookEditorNotifications.bookLoadError(error.message);
             } else {

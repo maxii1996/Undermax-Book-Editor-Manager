@@ -173,17 +173,28 @@
                 </div>
                 <div class="panel-content">
                     <div class="settings-group">
+                        <h4>Format Options</h4>
+                        <div class="format-selector">
+                            <select id="book-format-selector" class="modern-input">
+                                <option value="json">JSON (Standard)</option>
+                                <option value="encrypted">Encrypted (Secure)</option>
+                            </select>
+                            <p class="format-description">Standard JSON format is readable and compatible with all tools.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
                         <button id="download-btn" class="modern-button primary">
                             <i class="ri-download-line"></i> Download Book
                         </button>
-                        <p class="info-text">Save your book as a JSON file that can be loaded later.</p>
+                        <p class="info-text">Save your book as a file that can be loaded later.</p>
                     </div>
                     
                     <div class="settings-group">
                         <button id="load-book-btn" class="modern-button">
                             <i class="ri-upload-line"></i> Load Book
                         </button>
-                        <input type="file" id="file-input" accept=".json" style="display: none;">
+                        <input type="file" id="file-input" accept=".json,.ebk" style="display: none;">
                         <p class="info-text">Load a previously saved book file.</p>
                     </div>
                 </div>
@@ -280,6 +291,7 @@
     <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
     <script src="js/notifications/notifications.js"></script>
     <script src="js/ui-tabs.js"></script>
+    <script src="js/encryption-utils.js"></script>
     <script src="js/book.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/preview.js"></script>

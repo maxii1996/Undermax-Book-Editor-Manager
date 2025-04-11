@@ -350,12 +350,19 @@ function initToolbar() {
                 </div>
                 
                 <div class="select-container font-size-select">
-                    <select onchange="setFontSize(this.value)" class="toolbar-select" aria-label="Font Size">
+                    <select onchange="setFontSizePx(this.value)" class="toolbar-select" aria-label="Font Size">
                         <option value="">Size</option>
-                        <option value="1">Small</option>
-                        <option value="3">Normal</option>
-                        <option value="5">Large</option>
-                        <option value="7">Huge</option>
+                        <option value="8px">8px</option>
+                        <option value="10px">10px</option>
+                        <option value="12px">12px</option>
+                        <option value="14px">14px</option>
+                        <option value="16px">16px</option>
+                        <option value="20px">20px</option>
+                        <option value="24px">24px</option>
+                        <option value="28px">28px</option>
+                        <option value="32px">32px</option>
+                        <option value="48px">48px</option>
+                        <option value="64px">64px</option>
                     </select>
                     <i class="ri-arrow-down-s-line select-arrow"></i>
                 </div>
@@ -669,3 +676,46 @@ style.textContent = `
     /* Removing old styles as they will be in the external CSS file */
 `;
 document.head.appendChild(style);
+
+function setFontSizePx(size) {
+    if (!size || size === '') return;
+    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    
+    if (range.collapsed && editor.innerHTML === '') {
+        const span = document.createElement('span');
+        span.style.fontSize = size;
+        span.innerHTML = '&nbsp;';
+        
+        editor.appendChild(span);
+        
+        range.setStart(span.firstChild, 1);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else {
+        document.execCommand('styleWithCSS', false, true);
+        
+        const span = document.createElement('span');
+        span.style.fontSize = size;
+        
+        const content = range.extractContents();
+        span.appendChild(content);
+        range.insertNode(span);
+        
+        range.setStartAfter(span);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+    
+    editor.focus();
+    updateToolbarState();
+    editor.dispatchEvent(new Event('input'));
+}
+
+function setFontSize(size) {
+    execCommand('fontSize', size);
+}

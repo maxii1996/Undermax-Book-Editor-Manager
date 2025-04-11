@@ -650,6 +650,21 @@ function attachEventListeners() {
                 });
             });
         }
+
+        const formatSelector = document.getElementById("book-format-selector");
+        const formatDescription = document.querySelector(".format-description");
+        
+        if (formatSelector && formatDescription) {
+            formatSelector.addEventListener("change", function() {
+                const selectedFormat = this.value;
+                
+                if (selectedFormat === "encrypted") {
+                    formatDescription.textContent = "Encrypted format adds security to your book data and prevents unauthorized editing.";
+                } else {
+                    formatDescription.textContent = "Standard JSON format is readable and compatible with all tools.";
+                }
+            });
+        }
     } catch (error) {
         console.error("Error in attachEventListeners:", error);
         if (window.notifications && typeof window.notifications.error === 'function') {

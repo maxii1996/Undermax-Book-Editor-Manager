@@ -5,3 +5,36 @@
 @import 'zoom-controls.css';
 @import 'notifications.css';
 @import 'utilities.css';
+
+.format-selector {
+    margin-bottom: 15px;
+}
+
+.format-selector select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #252526;
+    color: #E0E0E0;
+    border: 1px solid #3E3E42;
+    margin-bottom: 8px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.format-selector select:focus {
+    border-color: #0078D7;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+}
+
+.format-selector select option {
+    background-color: #2D2D30;
+    color: #E0E0E0;
+}
+
+.format-description {
+    font-size: 13px;
+    color: #BFBFBF;
+    margin: 5px 0 0 0;
+    font-style: italic;
+}

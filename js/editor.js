@@ -1,6 +1,5 @@
 let editor = null;
 
-
 function initEditor() {
     editor = document.getElementById("editor-inner");
     if (!editor) return;
@@ -8,11 +7,13 @@ function initEditor() {
     editor.contentEditable = "true";
     editor.designMode = "on";
 
-    try {
-        document.execCommand('styleWithCSS', false, true);
-        document.execCommand('defaultParagraphSeparator', false, 'p');
-    } catch(e) {
-        console.warn('Error inicializando comandos del editor:', e);
+    if (document.execCommand) {
+        try {
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('defaultParagraphSeparator', false, 'p');
+        } catch(e) {
+            console.warn('Error inicializando comandos del editor:', e);
+        }
     }
     
     editor.addEventListener('paste', function(e) {
@@ -25,18 +26,14 @@ function initEditor() {
             text = window.clipboardData.getData('Text');
         }
         
-        const selection = window.getSelection();
-        if (selection.rangeCount && text) {
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            
-            const textNode = document.createTextNode(text);
-            range.insertNode(textNode);
-            
-            range.setStartAfter(textNode);
-            range.setEndAfter(textNode);
-            selection.removeAllRanges();
-            selection.addRange(range);
+        if (document.queryCommandSupported('insertText')) {
+            document.execCommand('insertText', false, text);
+        } else {
+            document.execCommand('insertHTML', false, text.replace(/&/g, "&amp;")
+                                                          .replace(/</g, "&lt;")
+                                                          .replace(/>/g, "&gt;")
+                                                          .replace(/"/g, "&quot;")
+                                                          .replace(/'/g, "&#039;"));
         }
     });
     
@@ -50,7 +47,7 @@ function initEditor() {
                 if (globalContentWarning) globalContentWarning.style.display = 'block';
             } else {
                 if (contentWarning) contentWarning.style.display = 'none';
-                if (globalContentWarning) contentWarning.style.display = 'none';
+                if (globalContentWarning) globalContentWarning.style.display = 'none';
             }
 
             if (currentPageIndex >= 0 && currentPageIndex < pages.length) {
@@ -101,11 +98,9 @@ function updateEditorColor() {
     if (editorInner) {
         editorInner.style.backgroundColor = color;
         
-        if (!editorInner.hasChildNodes() || editorInner.innerHTML.trim() === '') {
-            const brightness = getBrightness(color);
-            const textColor = brightness > 128 ? "#000000" : "#FFFFFF";
-            editorInner.style.color = textColor;
-        }
+        const brightness = getBrightness(color);
+        const textColor = brightness > 128 ? "#000000" : "#FFFFFF";
+        editorInner.style.color = textColor;
     }
 }
 
@@ -130,103 +125,10 @@ function hexToRgb(hex) {
 }
 
 function execCommand(command, value = null) {
-    try {
-        document.execCommand(command, false, value);
-    } catch (e) {
-        console.warn(`Error ejecutando comando ${command}:`, e);
-        applyFormattingAlternative(command, value);
-    }
-    
+    document.execCommand(command, false, value);
     editor.focus();
     updateToolbarState();
     editor.dispatchEvent(new Event('input'));
-}
-
-/**
- * Implementa alternativas para los comandos execCommand más comunes
- * utilizando técnicas modernas cuando sea posible
- */
-function applyFormattingAlternative(command, value) {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    
-    const range = selection.getRangeAt(0);
-    
-    const elementMap = {
-        'bold': 'strong',
-        'italic': 'em',
-        'underline': 'u',
-        'strikeThrough': 's'
-    };
-    
-    if (elementMap[command]) {
-        const element = document.createElement(elementMap[command]);
-        const content = range.extractContents();
-        element.appendChild(content);
-        range.insertNode(element);
-        
-        range.setStartAfter(element);
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        return;
-    }
-    
-    if (command.startsWith('justify')) {
-        const alignment = command.replace('justify', '').toLowerCase();
-        const paragraph = getNearestBlock(range.commonAncestorContainer);
-        
-        if (paragraph) {
-            paragraph.style.textAlign = alignment;
-        } else {
-            const div = document.createElement('div');
-            div.style.textAlign = alignment;
-            const content = range.extractContents();
-            div.appendChild(content);
-            range.insertNode(div);
-        }
-        return;
-    }
-    
-    if (command === 'foreColor') {
-        const span = document.createElement('span');
-        span.style.color = value;
-        const content = range.extractContents();
-        span.appendChild(content);
-        range.insertNode(span);
-        return;
-    }
-    
-    if (command === 'hiliteColor') {
-        const span = document.createElement('span');
-        span.style.backgroundColor = value;
-        const content = range.extractContents();
-        span.appendChild(content);
-        range.insertNode(span);
-        return;
-    }
-    
-    console.warn(`No hay implementación alternativa para el comando: ${command}`);
-}
-
-/**
- * Obtiene el bloque de texto más cercano (p, div, etc.)
- */
-function getNearestBlock(node) {
-    const blockElements = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'];
-    
-    if (node.nodeType === 3) {
-        node = node.parentNode;
-    }
-    
-    while (node && node !== editor) {
-        if (blockElements.includes(node.tagName)) {
-            return node;
-        }
-        node = node.parentNode;
-    }
-    
-    return null;
 }
 
 function toggleBold() {
@@ -254,134 +156,50 @@ function setFontFamily(family) {
 }
 
 function setTextColor(color) {
-    if (!editor) return;
-    
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    
-    const range = selection.getRangeAt(0);
-    
-    if (range.collapsed && (editor.innerHTML === '' || range.toString() === '')) {
-        const span = document.createElement('span');
-        span.style.color = color;
-        span.innerHTML = '&nbsp;';
-        
-        if (editor.innerHTML === '') {
-            editor.appendChild(span);
-        } else {
-            range.insertNode(span);
-        }
-        
-        range.selectNodeContents(span);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    } else {
-        try {
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('foreColor', false, color);
-        } catch(e) {
-            console.log("Usando implementación alternativa para color de texto:", e);
-            
-            const span = document.createElement('span');
-            span.style.color = color;
-            
-            const content = range.extractContents();
-            span.appendChild(content);
-            range.insertNode(span);
-            
-            range.setStartAfter(span);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
-    }
-    
-    editor.focus();
-    updateToolbarState();
-    editor.dispatchEvent(new Event('input'));
+    execCommand('foreColor', color);
 }
 
 function setBackgroundColor(color) {
-    if (!editor) return;
-    
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    
-    const range = selection.getRangeAt(0);
-    
-    if (range.collapsed && (editor.innerHTML === '' || range.toString() === '')) {
-        const span = document.createElement('span');
-        span.style.backgroundColor = color;
-        span.innerHTML = '&nbsp;';
-        
-        if (editor.innerHTML === '') {
-            editor.appendChild(span);
-        } else {
-            range.insertNode(span);
-        }
-        
-        range.selectNodeContents(span);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    } else {
-        try {
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('hiliteColor', false, color);
-        } catch(e) {
-            console.log("Usando implementación alternativa para color de fondo:", e);
-            
-            const span = document.createElement('span');
-            span.style.backgroundColor = color;
-            
-            const content = range.extractContents();
-            span.appendChild(content);
-            range.insertNode(span);
-            
-            range.setStartAfter(span);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
-    }
-    
-    editor.focus();
-    updateToolbarState();
-    editor.dispatchEvent(new Event('input'));
+    execCommand('hiliteColor', color);
 }
 
 function clearBackgroundColor() {
     if (!editor) return;
     
     const selection = window.getSelection();
-    if (!selection.rangeCount) return;
     
-    const range = selection.getRangeAt(0);
-    
-    if (range.collapsed && !hasBackgroundColorAtCursor()) {
-        return;
-    }
-    
-    try {
-        document.execCommand('styleWithCSS', false, true);
-        document.execCommand('hiliteColor', false, 'transparent');
-    } catch (e) {
-        console.log("Usando implementación alternativa para limpiar color de fondo:", e);
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        
+        try {
+            document.execCommand('hiliteColor', false, '');
+        } catch (e) {
+            console.log("Error usando hiliteColor con cadena vacía:", e);
+        }
+        
+        try {
+            document.execCommand('backColor', false, 'transparent');
+        } catch (e) {
+            console.log("Error usando backColor:", e);
+        }
         
         try {
             const clonedRange = range.cloneRange();
             const fragment = clonedRange.extractContents();
             
             const cleanBackgroundStyles = (node) => {
-                if (node.nodeType === 1) { 
+                if (node.nodeType === 1) {
                     if (node.style && node.style.backgroundColor) {
                         node.style.backgroundColor = '';
                     }
+                    if (node.style && node.style.background) {
+                        node.style.background = '';
+                    }
                     
                     if (node.tagName.toLowerCase() === 'span' && 
-                        node.attributes.length === 0 && 
-                        node.childNodes.length > 0) { 
+                        !node.attributes.length && 
+                        node.childNodes.length > 0) {
                         const parent = node.parentNode;
-                        
                         while (node.firstChild) {
                             parent.insertBefore(node.firstChild, node);
                         }
@@ -396,56 +214,15 @@ function clearBackgroundColor() {
             
             range.insertNode(fragment);
             
-            if (fragment.lastChild) {
-                range.setStartAfter(fragment.lastChild);
-                range.setEndAfter(fragment.lastChild);
-            }
             selection.removeAllRanges();
             selection.addRange(range);
         } catch (e) {
-            console.error("Error en la limpieza de estilos de fondo:", e);
+            console.log("Error en la manipulación DOM:", e);
         }
     }
     
-    editor.focus();
     updateToolbarState();
     editor.dispatchEvent(new Event('input'));
-}
-
-function hasBackgroundColorAtCursor() {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return false;
-    
-    const range = selection.getRangeAt(0);
-    const parentElement = range.startContainer.parentNode;
-    
-    if (parentElement && parentElement.style && parentElement.style.backgroundColor) {
-        return true;
-    }
-    
-    if (parentElement && parentElement.parentNode) {
-        const closestWithBgColor = findClosestElementWithBackgroundColor(parentElement);
-        return !!closestWithBgColor;
-    }
-    
-    return false;
-}
-
-function findClosestElementWithBackgroundColor(element) {
-    if (!element || element === editor) return null;
-    
-    if (element.style && element.style.backgroundColor && element.style.backgroundColor !== 'transparent') {
-        return element;
-    }
-    
-    const computedStyle = window.getComputedStyle(element);
-    if (computedStyle.backgroundColor && 
-        computedStyle.backgroundColor !== 'transparent' && 
-        computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-        return element;
-    }
-    
-    return findClosestElementWithBackgroundColor(element.parentNode);
 }
 
 function alignText(alignment) {
@@ -947,50 +724,23 @@ function setFontSizePx(size) {
         
         editor.appendChild(span);
         
-        const newRange = document.createRange();
-        newRange.setStart(span.firstChild, 1);
-        newRange.collapse(true);
+        range.setStart(span.firstChild, 1);
+        range.collapse(true);
         selection.removeAllRanges();
-        selection.addRange(newRange);
-    } else if (range.collapsed) {
-        try {
-            document.execCommand('styleWithCSS', false, true);
-            
-            const span = document.createElement('span');
-            span.style.fontSize = size;
-            span.innerHTML = '&#65279;';
-            
-            range.insertNode(span);
-            
-            range.setStart(span.firstChild, 1);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        } catch (e) {
-            console.warn('Error aplicando tamaño de fuente en cursor:', e);
-        }
+        selection.addRange(range);
     } else {
-        try {
-            const span = document.createElement('span');
-            span.style.fontSize = size;
-            
-            const content = range.extractContents();
-            span.appendChild(content);
-            range.insertNode(span);
-            
-            range.setStartAfter(span);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        } catch (e) {
-            console.warn('Error aplicando tamaño de fuente a selección:', e);
-            try {
-                document.execCommand('styleWithCSS', false, true);
-                document.execCommand('fontSize', false, size);
-            } catch (e2) {
-                console.error('No se pudo aplicar el tamaño de fuente:', e2);
-            }
-        }
+        document.execCommand('styleWithCSS', false, true);
+        
+        const span = document.createElement('span');
+        span.style.fontSize = size;
+        
+        const content = range.extractContents();
+        span.appendChild(content);
+        range.insertNode(span);
+        
+        range.setStartAfter(span);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
     
     editor.focus();

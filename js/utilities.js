@@ -89,7 +89,7 @@ window.BookImageUtils = {
                         });
                     }
                     
-                    localStorage.setItem(key, JSON.stringify(data));
+                    localStorage.setItem(key, JSON.stringify(data, null, 0));
                     return true;
                 }
             } catch (fallbackError) {

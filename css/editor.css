@@ -20,7 +20,7 @@
     padding: 15px;
     box-sizing: border-box;
     overflow-y: auto;
-    background-color: #1E1E1E;
+    background-color: #1e1e1e;
     color: #E0E0E0;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

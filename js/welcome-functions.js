@@ -107,6 +107,7 @@ function saveBookDataToLocalStorage() {
     if (pageInput) {
         const pageCount = parseInt(pageInput.value) || 1;
         window.bookData.pageCount = pageCount;
+        pageInput.value = pageCount;
         
         if (isNaN(window.bookData.pageCount) || window.bookData.pageCount < 1) {
             window.bookData.pageCount = 1;
@@ -119,8 +120,29 @@ function saveBookDataToLocalStorage() {
         }
     }
     
-    localStorage.setItem('newBookWizardData', JSON.stringify(window.bookData));
-    console.log('Datos del asistente guardados en localStorage, pageCount:', window.bookData.pageCount);
+    try {
+        const safeJsonString = JSON.stringify(window.bookData, (key, value) => {
+            if (typeof value === 'string') {
+                return value;
+            }
+            return value;
+        });
+        
+        localStorage.setItem('newBookWizardData', safeJsonString);
+        console.log('Datos del asistente guardados en localStorage, pageCount:', window.bookData.pageCount);
+    } catch (error) {
+        console.error('Error al guardar en localStorage:', error);
+        try {
+            const dataWithoutImages = {...window.bookData};
+            if (dataWithoutImages.coverImage) dataWithoutImages.coverImage = '';
+            if (dataWithoutImages.backCoverImage) dataWithoutImages.backCoverImage = '';
+            
+            localStorage.setItem('newBookWizardData', JSON.stringify(dataWithoutImages));
+            console.log('Datos guardados sin imágenes debido a limitaciones de almacenamiento');
+        } catch (fallbackError) {
+            console.error('Error al intentar guardar versión reducida:', fallbackError);
+        }
+    }
 }
 
 window.saveBookDataToLocalStorage = saveBookDataToLocalStorage;

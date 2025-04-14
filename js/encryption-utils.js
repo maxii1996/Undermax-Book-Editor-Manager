@@ -12,15 +12,34 @@ const EncryptionUtils = {
      */
     encryptData: function(data, password = "FlipBook-Secure") {
         try {
-            const dataString = typeof data === 'object' ? JSON.stringify(data) : data;
+            const dataString = typeof data === 'object' ? 
+                JSON.stringify(data, (key, value) => {
+                    if (typeof value === 'string') {
+                        return value;
+                    }
+                    return value;
+                }) : 
+                data;
             
-            let result = '';
-            for (let i = 0; i < dataString.length; i++) {
-                const charCode = dataString.charCodeAt(i) ^ password.charCodeAt(i % password.length);
-                result += String.fromCharCode(charCode);
+            const encoder = new TextEncoder();
+            const dataBytes = encoder.encode(dataString);
+            
+            const passwordBytes = encoder.encode(password);
+            const resultBytes = new Uint8Array(dataBytes.length);
+            
+            for (let i = 0; i < dataBytes.length; i++) {
+                resultBytes[i] = dataBytes[i] ^ passwordBytes[i % passwordBytes.length];
             }
             
-            return btoa(result);
+            let base64 = '';
+            const chunkSize = 8192;
+            
+            for (let i = 0; i < resultBytes.length; i += chunkSize) {
+                const chunk = resultBytes.subarray(i, i + chunkSize);
+                base64 += String.fromCharCode.apply(null, chunk);
+            }
+            
+            return btoa(base64);
         } catch (error) {
             console.error('Encryption failed:', error);
             throw new Error('Failed to encrypt data: ' + error.message);
@@ -28,20 +47,25 @@ const EncryptionUtils = {
     },
     
     /**
-     * Decrypts previously encrypted book data
-     * @param {String} encryptedData - The encrypted data in Base64 format
-     * @param {String} password - The encryption password (optional)
+     * Decrypts encrypted book data
+     * @param {String} encryptedData - The encrypted data
+     * @param {String} password - The decryption password (optional)
      * @returns {Object|String} - The decrypted data
      */
     decryptData: function(encryptedData, password = "FlipBook-Secure") {
         try {
-            const base64Decoded = atob(encryptedData);
+            const bytes = new Uint8Array(atob(encryptedData).split('').map(c => c.charCodeAt(0)));
             
-            let result = '';
-            for (let i = 0; i < base64Decoded.length; i++) {
-                const charCode = base64Decoded.charCodeAt(i) ^ password.charCodeAt(i % password.length);
-                result += String.fromCharCode(charCode);
+            const encoder = new TextEncoder();
+            const passwordBytes = encoder.encode(password);
+            const resultBytes = new Uint8Array(bytes.length);
+            
+            for (let i = 0; i < bytes.length; i++) {
+                resultBytes[i] = bytes[i] ^ passwordBytes[i % passwordBytes.length];
             }
+            
+            const decoder = new TextDecoder('utf-8');
+            const result = decoder.decode(resultBytes);
             
             try {
                 return JSON.parse(result);

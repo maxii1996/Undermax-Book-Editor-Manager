@@ -440,6 +440,7 @@ body.right-panel-collapsed #middle-panel {
     cursor: pointer;
     transition: all 0.2s ease;
     color: #E0E0E0;
+    position: relative;
 }
 
 .page-item:hover {
@@ -450,6 +451,47 @@ body.right-panel-collapsed #middle-panel {
 .page-item.active {
     background: rgba(0, 120, 215, 0.2);
     border-left: 3px solid #0078D7;
+}
+
+/* Animaciones para movimiento de páginas */
+@keyframes moveUpAnimation {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-20px);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes moveDownAnimation {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(20px);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.page-item.moving-up {
+    animation: moveUpAnimation 0.5s ease forwards;
+    z-index: 10;
+}
+
+.page-item.moving-down {
+    animation: moveDownAnimation 0.5s ease forwards;
+    z-index: 10;
 }
 
 .page-item-number {

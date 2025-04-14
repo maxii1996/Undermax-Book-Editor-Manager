@@ -151,6 +151,39 @@ function movePageUp(index) {
 
     saveEditorChanges();
 
+    const pageItems = document.querySelectorAll('.page-item');
+    
+    if (pageItems && pageItems.length > index && pageItems.length > index - 1) {
+        const pageToMove = pageItems[index];
+        const targetPage = pageItems[index - 1];
+        
+        if (pageToMove && targetPage) {
+            pageToMove.classList.add('moving-up');
+            targetPage.classList.add('moving-down');
+            
+            setTimeout(() => {
+                const temp = pages[index];
+                pages[index] = pages[index - 1];
+                pages[index - 1] = temp;
+
+                updatePageNames();
+
+                if (currentPageIndex === index) {
+                    currentPageIndex--;
+                } else if (currentPageIndex === index - 1) {
+                    currentPageIndex++;
+                }
+
+                renderPageList();
+                loadPageIntoEditor(currentPageIndex);
+                updateFlipBook();
+                notifications.success("Page moved up");
+            }, 500);
+            
+            return;
+        }
+    }
+    
     const temp = pages[index];
     pages[index] = pages[index - 1];
     pages[index - 1] = temp;
@@ -174,6 +207,39 @@ function movePageDown(index) {
 
     saveEditorChanges();
 
+    const pageItems = document.querySelectorAll('.page-item');
+    
+    if (pageItems && pageItems.length > index && pageItems.length > index + 1) {
+        const pageToMove = pageItems[index];
+        const targetPage = pageItems[index + 1];
+        
+        if (pageToMove && targetPage) {
+            pageToMove.classList.add('moving-down');
+            targetPage.classList.add('moving-up');
+            
+            setTimeout(() => {
+                const temp = pages[index];
+                pages[index] = pages[index + 1];
+                pages[index + 1] = temp;
+
+                updatePageNames();
+
+                if (currentPageIndex === index) {
+                    currentPageIndex++;
+                } else if (currentPageIndex === index + 1) {
+                    currentPageIndex--;
+                }
+
+                renderPageList();
+                loadPageIntoEditor(currentPageIndex);
+                updateFlipBook();
+                notifications.success("Page moved down");
+            }, 500);
+            
+            return;
+        }
+    }
+    
     const temp = pages[index];
     pages[index] = pages[index + 1];
     pages[index + 1] = temp;
@@ -208,6 +274,10 @@ function deletePage(index) {
     updateFlipBook();
     notifications.success("Page deleted");
 }
+
+window.movePageUp = movePageUp;
+window.movePageDown = movePageDown;
+window.deletePage = deletePage;
 
 function updatePageNames() {
     for (let i = 0; i < pages.length; i++) {
@@ -1169,13 +1239,29 @@ function showValidationErrors(issues) {
     errorDialog.id = 'validation-errors';
     errorDialog.className = 'custom-dialog';
 
+    if (!Array.isArray(issues)) {
+        console.error('Expected issues to be an array but got:', issues);
+        if (issues && typeof issues === 'object') {
+            try {
+                issues = Object.values(issues);
+            } catch (e) {
+                issues = [{ pageType: 'Unknown', issue: 'Validation error', type: 'error' }];
+            }
+        } else {
+            issues = [{ pageType: 'Unknown', issue: 'Validation error', type: 'error' }];
+        }
+    }
+
     let errorListHTML = '';
     issues.forEach(issue => {
-        const issueClass = issue.type === 'oversized' ? 'error-item' : '';
-        errorListHTML += `<li class="${issueClass}"><strong>${issue.pageType}</strong>: ${issue.issue}</li>`;
+        const issueType = issue.type || 'error';
+        const issueClass = issueType === 'oversized' ? 'error-item' : '';
+        const pageType = issue.pageType || 'Unknown page';
+        const issueText = issue.issue || 'Unknown error';
+        errorListHTML += `<li class="${issueClass}"><strong>${pageType}</strong>: ${issueText}</li>`;
     });
 
-    const hasImageIssues = issues.some(issue => issue.type === 'oversized');
+    const hasImageIssues = issues.some(issue => (issue.type || '') === 'oversized');
     const helpText = hasImageIssues ? 
         '<p class="help-text">Large images may cause storage issues or slow performance. Please optimize your images before uploading.</p>' : '';
 
@@ -1257,13 +1343,13 @@ function downloadJSON() {
                     fileExtension = ".ebk";
                 } else {
                     content = JSON.stringify(data, null, 2);
-                    contentType = "application/json";
+                    contentType = "application/json;charset=utf-8";
                     fileExtension = ".json";
                     notifications.warning("Encryption module not available, saving as JSON instead.");
                 }
             } else {
                 content = JSON.stringify(data, null, 2);
-                contentType = "application/json";
+                contentType = "application/json;charset=utf-8";
                 fileExtension = ".json";
             }
             
@@ -1337,7 +1423,12 @@ function processBookFile(file) {
                     throw new Error("Failed to decrypt book file: " + decryptError.message);
                 }
             } else {
-                newData = JSON.parse(fileContent);
+                try {
+                    newData = JSON.parse(fileContent);
+                } catch (jsonError) {
+                    console.error("JSON parse error:", jsonError);
+                    throw new Error("Invalid JSON format. The file may contain special characters that weren't properly encoded.");
+                }
             }
 
             if (newData.bookName === undefined || newData.pages === undefined) {
@@ -1385,7 +1476,7 @@ function processBookFile(file) {
         }
     };
 
-    reader.readAsText(file);
+    reader.readAsText(file, 'UTF-8');
 }
 
 function initializeBookFromWizard() {

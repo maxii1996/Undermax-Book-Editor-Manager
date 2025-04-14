@@ -34,6 +34,40 @@
 
 .welcome-header {
     text-align: center;
+    position: relative;
+    z-index: 5;
+}
+
+.version-badge {
+    position: absolute;
+    top: 25px;
+    right: -10em;
+    background: linear-gradient(45deg, #673aeb, #9557ff);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 10px rgba(104, 69, 219, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.version-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(104, 69, 219, 0.6);
+}
+
+.beta-tag {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .logo-container {
@@ -46,36 +80,43 @@
 
 .logo-container i {
     font-size: 40px;
-    color: #0078D7;
-    animation: pulse 2s infinite;
+    color: #945af3;
+    animation: pulseGlow 3s infinite;
+    filter: drop-shadow(0 0 8px rgba(148, 90, 243, 0.5));
 }
 
-@keyframes pulse {
+@keyframes pulseGlow {
     0% {
         transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(148, 90, 243, 0.5));
     }
 
     50% {
         transform: scale(1.1);
+        filter: drop-shadow(0 0 15px rgba(148, 90, 243, 0.7));
     }
 
     100% {
         transform: scale(1);
+        filter: drop-shadow(0 0 5px rgba(148, 90, 243, 0.5));
     }
 }
 
 .welcome-header h1 {
     font-size: 40px;
-    color: #E0E0E0;
+    color: #ffffff;
     margin: 0;
     font-weight: 500;
+    text-shadow: 0 0 15px rgba(148, 90, 243, 0.6);
+    letter-spacing: 1px;
 }
 
 .welcome-subtitle {
-    color: #BFBFBF;
+    color: #d8d8ff;
     font-size: 18px;
-    margin: 0;
-    opacity: 0.8;
+    margin: 10px 0 0;
+    opacity: 0.9;
+    text-shadow: 0 0 10px rgba(79, 56, 161, 0.7);
 }
 
 .card-container {
@@ -83,21 +124,25 @@
     justify-content: center;
     gap: 40px;
     width: 100%;
+    position: relative;
+    z-index: 5;
 }
 
 .welcome-card {
-    background: #252526;
-    border-radius: 10px;
+    background: rgba(52, 47, 74, 0.33);
+    border-radius: 15px;
     padding: 30px;
     width: 300px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(148, 90, 243, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 .welcome-card::before {
@@ -107,15 +152,16 @@
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(to right, #0078D7, #00A2FF);
+    background: linear-gradient(to right, #673aeb, #9557ff);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .welcome-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(148, 90, 243, 0.3);
 }
 
 .welcome-card:hover::before {
@@ -124,16 +170,28 @@
 
 .card-icon {
     font-size: 60px;
-    color: #0078D7;
     margin-bottom: 20px;
+    transition: all 0.3s ease;
 }
 
 #new-book .card-icon {
     color: #00A2FF;
+    filter: drop-shadow(0 0 10px rgba(0, 162, 255, 0.3));
+}
+
+#new-book:hover .card-icon {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(0, 162, 255, 0.5));
 }
 
 #load-book .card-icon {
     color: #FF9800;
+    filter: drop-shadow(0 0 10px rgba(255, 152, 0, 0.3));
+}
+
+#load-book:hover .card-icon {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(255, 152, 0, 0.5));
 }
 
 .welcome-card h2 {
@@ -151,10 +209,10 @@
 }
 
 .card-button {
-    background: linear-gradient(to bottom, #0078D7, #006CC1);
+    background: linear-gradient(45deg, #5a3dbf, #845dff);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 12px 24px;
     font-size: 16px;
     font-weight: 500;
@@ -163,83 +221,145 @@
     align-items: center;
     gap: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 15px rgba(90, 61, 191, 0.4);
     width: 100%;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
 }
 
 .card-button:hover {
-    background: linear-gradient(to bottom, #0086F0, #0078D7);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    transform: translateY(-2px);
+    background: linear-gradient(45deg, #6845db, #9673ff);
+    box-shadow: 0 6px 20px rgba(104, 69, 219, 0.5);
+    transform: translateY(-3px);
+}
+
+.card-button:hover::before {
+    left: 100%;
 }
 
 .card-button:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(104, 69, 219, 0.4);
 }
 
-#load-book-btn {
-    background: linear-gradient(to bottom, #FF9800, #F57C00);
+#new-book .card-button {
+    background: linear-gradient(45deg, #0078D7, #00A2FF);
+    box-shadow: 0 3px 15px rgba(0, 120, 215, 0.4);
 }
 
-#load-book-btn:hover {
-    background: linear-gradient(to bottom, #FFA726, #FF9800);
+#new-book .card-button:hover {
+    background: linear-gradient(45deg, #0086F0, #30B2FF);
+    box-shadow: 0 6px 20px rgba(0, 126, 240, 0.5);
 }
 
-.welcome-card .tooltip {
+#load-book .card-button {
+    background: linear-gradient(45deg, #E65100, #FF9800);
+    box-shadow: 0 3px 15px rgba(230, 81, 0, 0.4);
+}
+
+#load-book .card-button:hover {
+    background: linear-gradient(45deg, #F57C00, #FFB74D);
+    box-shadow: 0 6px 20px rgba(245, 124, 0, 0.5);
+}
+
+.tooltip {
     position: absolute;
-    bottom: -40px;
+    top: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #333;
-    color: white;
+    background-color: rgba(34, 24, 63, 0.85);
+    color: #E0E0E0;
     padding: 8px 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     opacity: 0;
-    visibility: hidden;
+    pointer-events: none;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
     white-space: nowrap;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-}
-
-.welcome-card .tooltip::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 6px 6px 6px;
-    border-style: solid;
-    border-color: transparent transparent #333 transparent;
+    margin-top: 10px;
+    border: 1px solid rgba(148, 90, 243, 0.2);
+    z-index: 100;
+    width: auto;
+    max-width: 200px;
 }
 
 .welcome-card:hover .tooltip {
-    bottom: -50px;
     opacity: 1;
-    visibility: visible;
+    transform: translateX(-50%) translateY(5px);
 }
 
 .welcome-footer {
-    margin-top: 20px;
+    background: rgba(35, 33, 49, 0.4);
+    border-radius: 10px;
+    padding: 15px 25px;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 600px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(148, 90, 243, 0.2);
     text-align: center;
+    transition: all 0.3s ease;
+}
+
+.welcome-footer:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    border-color: rgba(148, 90, 243, 0.3);
+    background: rgba(35, 33, 49, 0.5);
 }
 
 .welcome-footer p {
     color: #BFBFBF;
     font-size: 14px;
+    margin: 8px 0;
+    line-height: 1.4;
 }
 
 .welcome-footer a {
-    color: #0078D7;
+    color: #9e80ff;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    border-radius: 4px;
 }
 
 .welcome-footer a:hover {
-    color: #00A2FF;
-    text-decoration: underline;
+    color: #b39dff;
+    background: rgba(158, 128, 255, 0.1);
+    text-decoration: none;
+}
+
+.plugin-link {
+    color: #00A2FF !important;
+    background: rgba(0, 162, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+.plugin-link:hover {
+    background: rgba(0, 162, 255, 0.12);
+    color: #39b6ff !important;
 }
 
 .wizard-container {

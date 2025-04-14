@@ -815,6 +815,9 @@ function renderPageList() {
     pages.forEach((page, index) => {
         const pageItem = document.createElement("div");
         pageItem.className = "page-item" + (index === currentPageIndex ? " active" : "");
+        const isFirstPage = index === 0;
+        const isLastPage = index === pages.length - 1;
+        const isMiddlePage = !isFirstPage && !isLastPage;
 
         const pageNumber = document.createElement("div");
         pageNumber.className = "page-item-number";
@@ -832,11 +835,45 @@ function renderPageList() {
         }
 
         const pageActions = document.createElement("div");
-        pageActions.className = "page-item-actions";
+        pageActions.className = "page-actions";
 
-        if (index > 0 && index < pages.length - 1) {
+        if (isMiddlePage) {
+            const moveUpBtn = document.createElement("button");
+            moveUpBtn.className = `page-btn move-up ${index <= 1 ? 'disabled' : ''}`;
+            moveUpBtn.innerHTML = '<i class="ri-arrow-up-s-line"></i>';
+            moveUpBtn.title = "Move page up";
+
+            if (index > 1) {
+                moveUpBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (typeof movePageUp === 'function') {
+                        movePageUp(index);
+                    }
+                });
+            } else {
+                moveUpBtn.disabled = true;
+            }
+            pageActions.appendChild(moveUpBtn);
+
+            const moveDownBtn = document.createElement("button");
+            moveDownBtn.className = `page-btn move-down ${index >= pages.length - 2 ? 'disabled' : ''}`;
+            moveDownBtn.innerHTML = '<i class="ri-arrow-down-s-line"></i>';
+            moveDownBtn.title = "Move page down";
+
+            if (index < pages.length - 2) {
+                moveDownBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (typeof movePageDown === 'function') {
+                        movePageDown(index);
+                    }
+                });
+            } else {
+                moveDownBtn.disabled = true;
+            }
+            pageActions.appendChild(moveDownBtn);
+
             const deleteBtn = document.createElement("button");
-            deleteBtn.className = "page-action-btn delete";
+            deleteBtn.className = "page-btn delete";
             deleteBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
             deleteBtn.title = "Delete page";
             deleteBtn.addEventListener("click", (e) => {

@@ -100,6 +100,11 @@
                             <button id="resetDimensions" class="modern-button reset-btn"><i class="ri-refresh-line"></i> Reset</button>
                         </div>
                     </div>
+                    
+                    <div class="preview-warning-banner blue">
+                        <i class="ri-information-fill"></i>
+                        <p>The preview may not exactly match what you see in the game. For best results, leave at least 15% of the bottom area unused.</p>
+                    </div>
                 </div>
             </div>
             
@@ -132,6 +137,11 @@
                                 <input type="color" id="pageBgColor" value="#FFFFFF" class="modern-color">
                                 <div class="color-preview" style="background-color: #FFFFFF;"></div>
                             </div>
+                        </div>
+                        <div class="bg-action-row" style="margin-top: 10px;">
+                            <button id="copy-bg-color-btn" class="modern-button secondary">
+                                <i class="ri-file-copy-line"></i> Copy Color from another page
+                            </button>
                         </div>
                     </div>
                     
@@ -231,7 +241,10 @@
     <div id="right-panel">
         <div class="panel-resize-handle" id="right-panel-resizer"></div>
         <div class="preview-controls">
-            <div class="preview-label">Book Preview</div>
+            <div class="preview-label">Book Preview <i class="ri-information-fill info-tooltip-icon"></i>
+                <div class="preview-tooltip">The preview here may not exactly match what you see in the game, as there are many factors that could alter its exact appearance, but it should be close enough.
+For best results, it is recommended to leave at least 15% of the bottom area unused.</div>
+            </div>
             <div class="zoom-actions">
                 <button id="center-book" class="action-btn" title="Center Book"><i class="ri-focus-2-line"></i></button>
                 <button id="reset-zoom" class="action-btn" title="Reset Zoom"><i class="ri-restart-line"></i></button>
@@ -286,6 +299,52 @@
             </div>
         </div>
     </div>
+    
+    <div id="copy-bg-color-dialog" class="custom-dialog">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>Copy Background Color</h3>
+                <button class="dialog-close" id="close-copy-bg-dialog-btn">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <div class="copy-bg-step-1">
+                    <p>From which page would you like to copy the background color?</p>
+                    <div class="page-select-container">
+                        <select id="source-page-select" class="modern-input">
+                        </select>
+                    </div>
+                    <div class="source-color-preview" style="margin-top: 15px;">
+                        <span>Selected color: </span>
+                        <div id="source-color-preview" style="display: inline-block; width: 24px; height: 24px; border-radius: 4px; vertical-align: middle; border: 1px solid #3E3E42;"></div>
+                        <span id="source-color-hex" style="margin-left: 8px; font-family: monospace; color: #BFBFBF;"></span>
+                    </div>
+                </div>
+                
+                <div class="copy-bg-step-2" style="margin-top: 20px; display: none;">
+                    <p id="copy-confirmation-message">We'll copy the background color from page <span id="source-page-num"></span>.</p>
+                    <p>To which pages would you like to apply this color?</p>
+                    
+                    <div class="quick-selection-buttons" style="display: flex; gap: 8px; margin: 15px 0; flex-wrap: wrap;">
+                        <button id="select-all-except-covers" class="modern-button secondary">All (Except Cover & Back)</button>
+                        <button id="select-all-with-covers" class="modern-button secondary">All (Including Cover & Back)</button>
+                        <button id="select-none" class="modern-button secondary">None</button>
+                        <button id="select-custom" class="modern-button secondary">Custom Selection</button>
+                    </div>
+                    
+                    <div id="pages-selection-container" style="max-height: 200px; overflow-y: auto; margin-top: 10px; padding: 10px; border-radius: 6px; background: rgba(45, 45, 48, 0.3);">
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="dialog-btn cancel" id="cancel-copy-bg-btn">Cancel</button>
+                <button class="dialog-btn" id="back-copy-bg-btn" style="display: none;">Back</button>
+                <button class="dialog-btn" id="next-copy-bg-btn">Next</button>
+                <button class="dialog-btn confirm" id="apply-copy-bg-btn" style="display: none;">Apply</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
@@ -302,6 +361,7 @@
     <script src="js/constants.js"></script>
     <script src="js/debug-utils.js"></script>
     <script src="js/dimension-debug.js"></script>
+    <script src="js/copy-bg-color.js"></script>
 </body>
 
 </html>

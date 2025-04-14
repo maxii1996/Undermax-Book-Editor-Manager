@@ -70,6 +70,83 @@
     font-size: 14px;
     color: #BFBFBF;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.info-tooltip-icon {
+    margin-left: 6px;
+    font-size: 14px;
+    color: #0078D7;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.info-tooltip-icon:hover {
+    color: #1A9FFF;
+    transform: scale(1.15);
+}
+
+.preview-tooltip {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 300px;
+    background: #3C3C3C;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 12px;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #E0E0E0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.info-tooltip-icon:hover + .preview-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.preview-warning-banner {
+    background: rgba(255, 189, 89, 0.15);
+    border-left: 3px solid #FFB224;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.preview-warning-banner i {
+    color: #FFB224;
+    font-size: 18px;
+    margin-top: 2px;
+}
+
+.preview-warning-banner p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #E0E0E0;
+}
+
+.preview-warning-banner.blue {
+    background: rgba(0, 120, 215, 0.15);
+    border-left: 3px solid #0078D7;
+}
+
+.preview-warning-banner.blue i {
+    color: #0078D7;
 }
 
 #flip-book-container {
@@ -233,6 +310,12 @@
     display: flex;
     gap: 6px;
     z-index: 2;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.page-item:hover .page-actions {
+    opacity: 1;
 }
 
 .page-btn {
@@ -245,7 +328,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     font-size: 14px;
     padding: 0;
     position: relative;
@@ -253,7 +336,12 @@
 
 .page-btn.move-up:hover,
 .page-btn.move-down:hover {
-    color: #CCCCCC;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.page-btn.move-down:hover {
+    transform: translateY(2px);
 }
 
 .page-btn.delete:hover {
@@ -263,6 +351,7 @@
 .page-btn.disabled {
     opacity: 0.3;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
 .page-name {
